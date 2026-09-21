@@ -7,6 +7,7 @@ entry, statically audit and convert each pickle once to safetensors (``convert_s
 converted files against their pinned digests. ``--verify-only`` skips the download; ``--zip`` packages the
 converted-only snapshot (the two safetensors files plus the manifest) for a DIMER upload.
 """
+# ruff: noqa: E501  -- thin CLI over the package, written at the fleet width
 
 from __future__ import annotations
 

@@ -122,13 +122,13 @@ def test_release_notebook_loads_on_the_available_device() -> None:
 
 def test_release_notebook_source_is_clean() -> None:
     notebook = _load_notebook()
-    source = _source_text(notebook)
 
-    # The vendored modeling.py cell keeps upstream's own `# TODO` (the YOLOX precedent); every authored cell is scanned.
+    # The vendored modeling.py cell keeps upstream's own `# TODO` (the YOLOX precedent);
+    # every authored cell is scanned.
     authored = "\n".join(
         "".join(cell["source"])
         for cell in notebook["cells"]
-        if not cell.get("metadata", {}).get("dimer", {}).get("embedded_module", "").endswith("modeling.py")
+        if not cell.get("metadata", {}).get("dimer", {}).get("embedded_module", "").endswith("modeling.py")  # noqa: E501
     )
     forbidden = ("TODO", "TBD", "FIXME")
     for marker in forbidden:
