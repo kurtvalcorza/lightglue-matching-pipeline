@@ -22,7 +22,7 @@ The wrapper code in this repository is MIT licensed. The model weights and the v
 
 **The labels are exact.** The tutorial's pairs are photographs and their own copies under seeded homographies with seeded re-lighting, so every returned match has a reprojection error against the reference and every reported precision is against ground truth, not a human judgement. Real pairs of a scene need depth, pose or a fitted homography before they can be scored.
 
-**The frozen matcher fails on rotation, and that is the tutorial's task.** ALIKED descriptors and LightGlue's positional encoding are not rotation-invariant. The build record measured precision at 3 px of @P:FROZEN_P3@ over the 96 test pairs — @P:FROZEN_EASY_P3@ on the easy tier, **@P:FROZEN_HARD_P3@ on the tier rotated up to ±150°** — against @P:DNN_P3@ for the same keypoints matched by descriptor nearest neighbour, @P:PNN_P3@ for a patch nearest neighbour and @P:ID_P3@ for the identity guess. A bounded fine-tuning of the matcher's last two layers and assignment head on 216 pairs (half rotated) @P:GAIN_SHORT@; the adaptation is selected on validation precision and a run that keeps epoch 0 is a valid outcome the notebook anticipates.
+**The frozen matcher fails on rotation, and that is the tutorial's task.** ALIKED descriptors and LightGlue's positional encoding are not rotation-invariant. The build record measured precision at 3 px of 0.750 over the 96 test pairs — 0.999 on the easy tier, **0.500 on the tier rotated up to ±150°** — against 0.624 for the same keypoints matched by descriptor nearest neighbour, 0.346 for a patch nearest neighbour and 0.006 for the identity guess. A bounded fine-tuning of the matcher's last two layers and assignment head on 216 pairs (half rotated) moved precision at 3 px from 0.75 to 0.76 with epoch 2 kept — 0.50 → 0.53 on the rotated tier; the adaptation is selected on validation precision and a run that keeps epoch 0 is a valid outcome the notebook anticipates.
 
 ## Quick start
 
@@ -36,7 +36,7 @@ homography, inliers = ransac_homography(result["kpts0"], result["kpts1"])       
 splits = build_sample_dataset(read_corpus(fetch_corpus()), seed=42)                    # 216 / 48 / 96 homography pairs from 360 CC0 photographs
 print(pipe.evaluate_baselines(splits["test"])["descriptor_nn"]["precision_3px"])       # the same keypoints without the learned matcher
 print(pipe.evaluate(splits["test"])["precision_3px"])                                  # frozen
-pipe.adapt(splits["train"], splits["validation"], epochs=@P:EPOCHS@, lr=@P:LR@, batch_size=4)  # bounded matcher fine-tuning, epoch selected on validation precision
+pipe.adapt(splits["train"], splits["validation"], epochs=3, lr=1e-4, batch_size=4)  # bounded matcher fine-tuning, epoch selected on validation precision
 print(pipe.evaluate(splits["test"])["precision_3px"])                                  # adapted, same pairs
 pipe.save_artifact("outputs/adapter")
 ```
@@ -48,7 +48,7 @@ pipe.save_artifact("outputs/adapter")
 - `validate_dataset(records)` checks the record shape, the image sizes, the id pattern and uniqueness and the homography's shape and rank (4..5,000 records) and returns a manifest with a dataset digest; `make_pair` / `make_pairs` synthesise pairs from photographs (tiers `easy` / `hard` — the hard tier rotates up to ±150°); `build_sample_dataset` splits the pinned corpus by photograph, stratified per species; `split_dataset` does the same for BYOD photographs after pixel-digest de-duplication; `check_split_disjoint` asserts no photograph is shared; `observer_overlap` reports observers in more than one split.
 - `evaluate(records)` matches every pair and scores it with `metrics.pair_metrics` / `matching_metrics`, per tier and per pair; `evaluate_baselines(records)` scores the identity guess, the patch nearest neighbour and the descriptor nearest neighbour (the pipeline's own ALIKED keypoints matched by mutual nearest neighbour, no learned matcher) with the same code.
 - `adapt(train, val=None, *, epochs=3, lr=1e-4, batch_size=4, trainable_layers=2, seed=0, progress=None)` caches the frozen extractor's features once, then trains only the last `trainable_layers` of LightGlue's nine transformer layers and the final assignment head (2,567,169 of 11,884,625 parameters by default) with the LightGlue assignment loss against the homography's ground-truth assignment (pairs under 3 px positive, keypoints with no partner within 5 px unmatched); AdamW, pairs accumulated per step, gradient clipping at 1.0, seeded order, no scheduler; the epoch with the highest validation precision at 3 px is kept (ties: homography accuracy); transactional restore on any failure.
-- `save_artifact(dir)` writes the trained tensors as `adapter.safetensors` (about @P:ADAPTER_MB@ MB) plus a `manifest.json` (format `org.valcorza.lightglue.adapter.v1`: base id, revision and the two weight digests, tensor names, file size and SHA-256, training configuration, epoch history); `from_artifact(dir)` re-verifies the base snapshot, checks the manifest, the digest and the exact tensor set before deserialising, refuses any tensor outside the matcher, and overlays the tensors onto a freshly loaded base.
+- `save_artifact(dir)` writes the trained tensors as `adapter.safetensors` (about 10.3 MB) plus a `manifest.json` (format `org.valcorza.lightglue.adapter.v1`: base id, revision and the two weight digests, tensor names, file size and SHA-256, training configuration, epoch history); `from_artifact(dir)` re-verifies the base snapshot, checks the manifest, the digest and the exact tensor set before deserialising, refuses any tensor outside the matcher, and overlays the tensors onto a freshly loaded base.
 
 ## Live tutorial
 
@@ -64,7 +64,7 @@ pipe.save_artifact("outputs/adapter")
 - `lightglue_matching_result.json`
 - `provenance.json`
 
-The default path runs on CPU and uses CUDA automatically when present (about @P:CPU_TOTAL_MIN@ minutes on the build workstation's CPU after the downloads; a hosted T4 finishes in minutes). The metrics it prints are one seeded split of one 360-pair sample under synthetic warps — evidence that the adaptation contract works, not a matching benchmark or production-fitness evidence. The `main` integration workflow runs the real-checkpoint tests and the notebook against the pinned files.
+The default path runs on CPU and uses CUDA automatically when present (about 61 minutes on the build workstation's CPU after the downloads; a hosted T4 finishes in minutes). The metrics it prints are one seeded split of one 360-pair sample under synthetic warps — evidence that the adaptation contract works, not a matching benchmark or production-fitness evidence. The `main` integration workflow runs the real-checkpoint tests and the notebook against the pinned files.
 
 ## Release status
 

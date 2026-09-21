@@ -78,8 +78,8 @@ Before changing the registry status from `Candidate` to `Release-grade`:
    manifest itself, fetches the two source pickles from the release tag and the pinned commit, audits and converts
    them, and fetches the pinned photographs from the iNaturalist open-data bucket, so neither directory may be seeded);
 3. run the notebook top-to-bottom without editing implementation cells (form parameters at their defaults:
-   `USE_BYOD = False`, `SPLIT_SEED = 42`, `EPOCHS = @P:EPOCHS@`, `LEARNING_RATE = @P:LR@`, `BATCH_SIZE = 4`,
-   `TRAINABLE_LAYERS = @P:LAYERS@`);
+   `USE_BYOD = False`, `SPLIT_SEED = 42`, `EPOCHS = 3`, `LEARNING_RATE = 1e-4`, `BATCH_SIZE = 4`,
+   `TRAINABLE_LAYERS = 2`);
 4. verify that Section 1 reports `NOTEBOOK_SOURCE.repository_revision` equal to the revision recorded in
    `metadata.dimer.generated_from` and that the installed core package versions equal the inline `PINS`
    (= `pyproject.toml`): `torch==2.14.0`, `torchvision==0.29.0`, `safetensors==0.8.0`, `numpy==2.5.3`,
@@ -110,21 +110,21 @@ Before changing the registry status from `Candidate` to `Release-grade`:
      `examples/sample-data/SHA256SUMS`) and warped under `SHAPES_H`; `validate_inputs` writing
      `outputs/…_input_manifest.json` (verdict `accepted`, one recorded rejection finding from the remote-URL
      probe); `match` on the drawn pair with every sanity check `True` and the per-pair `evaluation_report` verdict
-     `sample-sanity` (the build record measured @P:SCENE_FROZEN@ frozen and @P:SCENE_ADAPTED@ adapted);
-   - Section 6: the identity guess (precision at 3 px ≈ @P:ID_P3@), the patch nearest neighbour (≈ @P:PNN_P3@),
-     the descriptor nearest neighbour (≈ @P:DNN_P3@) and the frozen matcher's test score (precision at 3 px ≈
-     @P:FROZEN_P3@ — ≈ @P:FROZEN_EASY_P3@ easy / @P:FROZEN_HARD_P3@ hard —, ≈ @P:FROZEN_MPP@ matches per pair,
-     homography accuracy at 3 px ≈ @P:FROZEN_HACC@ on the CPU build record) with the per-tier breakdown and the
+     `sample-sanity` (the build record measured 32 matches at precision 1.000 (35 / 52 keypoints) frozen and 32 at 1.000 adapted);
+   - Section 6: the identity guess (precision at 3 px ≈ 0.006), the patch nearest neighbour (≈ 0.346),
+     the descriptor nearest neighbour (≈ 0.624) and the frozen matcher's test score (precision at 3 px ≈
+     0.750 — ≈ 0.999 easy / 0.500 hard —, ≈ 582 matches per pair,
+     homography accuracy at 3 px ≈ 0.708 on the CPU build record) with the per-tier breakdown and the
      weakest pairs, and the cell's assertion that the frozen matcher is above the two non-neural baselines;
    - Section 7: `pipe.adapt` printing epoch 0 as the frozen model, 2,567,169 trainable of 11,884,625 parameters,
      the ground-truth rule (3 px positive, 5 px negative) and an epoch history with the validation precision
-     selecting the epoch (`best_epoch` @P:BEST_EPOCH@ in the build record — an epoch-0 result is a valid outcome);
+     selecting the epoch (`best_epoch` 2 in the build record — an epoch-0 result is a valid outcome);
    - Section 8: `pipe.evaluate` on the validation and test splits with the five-way comparison, the per-tier
      breakdown and `outputs/…_evaluation_report.json` written (the cell asserts the adapted test precision at 3 px
-     is not below the frozen one by more than 0.01 — @P:ADAPTED_P3@ versus @P:FROZEN_P3@ in the build record);
+     is not below the frozen one by more than 0.01 — 0.765 versus 0.750 in the build record);
    - Section 9: the drawn pair re-matched by the adapted model with the `sample-sanity` report,
      `outputs/…_shapes.json` written; `pipe.save_artifact` writing
-     `outputs/…_adapter/{adapter.safetensors,manifest.json}` (@P:ADAPTER_TENSORS@ tensors, @P:ADAPTER_BYTES@ bytes)
+     `outputs/…_adapter/{adapter.safetensors,manifest.json}` (48 tensors, 10,273,700 bytes)
      and `LightGluePipeline.from_artifact` reloading it with 4/4 identical match sets on four test pairs (the cell
      asserts it); `outputs/provenance.json` and `outputs/…_result.json` written with `NOTEBOOK_SOURCE`, the model
      identity and licence, the snapshot block (`weight_file`, `weight_format`, `weight_sha256`, `extractor_file`,
@@ -154,7 +154,8 @@ stated runtime, not general estimates.
 
 | Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
 |---|---|---|---|---|---|
-| 2026-09-21 | package API, not the notebook (source at the revision that generated the first committed blob) | Build workstation CPU (`CUDA_VISIBLE_DEVICES=-1`, Python 3.12, torch 2.14.0; snapshot converted and the 360 photographs pre-staged) | The notebook's default path replayed cell by cell through the package API (`build_sample_dataset(seed=42)` → 216 / 48 / 96 pairs, `validate_dataset` per split, `check_split_disjoint`, `evaluate_baselines`, `pipe.evaluate` frozen, `pipe.adapt` at the defaults, `pipe.evaluate` adapted, `save_artifact`, `from_artifact` with match parity): @P:BUILD_RECORD@ | @P:CPU_TOTAL_S@ s | PASS — pre-flight only |
+| 2026-09-21 | package API, not the notebook (source at the revision that generated the first committed blob) | Build workstation CPU (`CUDA_VISIBLE_DEVICES=-1`, Python 3.12, torch 2.14.0; snapshot converted and the 360 photographs pre-staged) | The notebook's default path replayed cell by cell through the package API (`build_sample_dataset(seed=42)` → 216 / 48 / 96 pairs, `validate_dataset` per split, `check_split_disjoint`, `evaluate_baselines`, `pipe.evaluate` frozen, `pipe.adapt` at the defaults, `pipe.evaluate` adapted, `save_artifact`, `from_artifact` with match parity): frozen matcher scored on the 96 test pairs in 154.8 s, the three baselines in 1139.5 s (identity 1 s, patch neighbour 1005 s, descriptor neighbour 131 s), ALIKED features of the 264 training and validation pairs cached in 288 s, 3 epochs of the default recipe (lr 1e-4, batch 4, last 2 layers + head, 2,567,169 of 11,884,625 parameters, ground truth 127,211 positive pairs at 3 / 5 px) in 2096.3 s (validation precision at 3 px 0.723 → 0.735 → 0.745 → 0.732, homography accuracy 0.729 → 0.708 → 0.708 → 0.688, train loss 3.721 → 3.225 → 2.947, epoch 2 kept), the adapter 48 tensors / 10,273,700 bytes with match parity on the first test pair (same count True, max abs difference 0.0); test readings — identity guess precision@3px 0.006 / homography acc@3px 0.000; patch neighbour 0.346 / 0.458 (267 matches per pair); descriptor neighbour 0.624 / 0.646 (626 matches per pair; easy 0.981 / hard 0.268); frozen 0.750 (1 px 0.591, 5 px 0.803) / 0.708 (582 matches, 559 inliers per pair, median inlier error 0.37 px; easy 0.999 / hard 0.500); adapted 0.765 / 0.698 (579 matches per pair; easy 0.998 / hard 0.532); drawn pair 32 matches / precision 1.000 frozen → 32 / 1.000 adapted | 3645.6 s | PASS — pre-flight only |
+| 2026-09-21 | package API at `36a85f7` (the recipe probe, not the notebook blob) | Kaggle Tesla T4 script kernel (`kurtvalcorza/dimer-probe-lightglue-recipe` v1; `torch 2.14.0+cu130`, `torchvision 0.29.0`, Python 3.12, `cuda`, float32), branch cloned, pins installed, both sources fetched, audited and converted | `tests/test_model_backed.py` (5 skipped — the suite keys on the converted files, which `from_pretrained` produced only after pytest ran; the suite passed 4 / 1 skipped on the CPU), then the notebook's default path: frozen 0.750 (hard 0.500) in 19.9 s, the three baselines in 297.3 s, and four adaptation arms from a fresh base — A lr 0.0001 × 6 epochs, last 2 layers: test 0.777 (hard 0.556, homography accuracy 0.698), epoch 5 kept, validation 0.723 → 0.735 → 0.736 → 0.729 → 0.732 → 0.744 → 0.727; B lr 0.0003 × 6 epochs, last 2 layers: test 0.772 (hard 0.546, homography accuracy 0.708), epoch 2 kept, validation 0.723 → 0.748 → 0.748 → 0.742 → 0.729 → 0.738 → 0.735; C lr 0.0001 × 6 epochs, last 4 layers: test 0.771 (hard 0.545, homography accuracy 0.719), epoch 2 kept, validation 0.723 → 0.766 → 0.769 → 0.746 → 0.751 → 0.740 → 0.746; D lr 0.0003 × 8 epochs, last 4 layers: test 0.772 (hard 0.547, homography accuracy 0.688), epoch 1 kept, validation 0.723 → 0.750 → 0.739 → 0.727 → 0.743 → 0.724 → 0.729 → 0.732 → 0.722 | 1521.0 s | PASS — recipe probe; every arm inside a 0.771–0.777 plateau |
 | 2026-09-20 | package API at the working tree of 2026-09-20 (the XoFTR row's ±35° hard tier, before this row's ±150° tier) | Build workstation CPU | The same replay with the earlier tier: frozen precision at 3 px 0.981 (homography accuracy 0.969, 720 matches per pair), descriptor nearest neighbour 0.884, patch neighbour 0.381, identity 0.007; `adapt(epochs=3, lr=1e-4, trainable_layers=2)` kept epoch 0 (validation 0.981 → 0.976 / 0.976 / 0.979) so adapted = frozen — the finding that made this row rotate its hard tier | 2061.1 s | PASS — pre-flight only; superseded tier |
 | 2026-09-20 | vendored networks and conversion smoke (source before the package existed) | Build workstation CPU | both pickles audited (globals = the fleet's set), converted and loaded strictly into the stitched `modeling.py`; one photograph matched against its warp; a training forward + backward through the matcher | — | PASS — pre-flight only |
 
@@ -168,7 +169,7 @@ notebook prose quotes; it is not REL1/REL10 supported-runtime evidence, and a GP
 recorded here; any later change to the carried modules or to the notebook produces a new blob and returns the
 registry to **Candidate** until a clean run of that blob is recorded.
 
-Facts a reviewer should still weigh: @P:REVIEWER_FACTS@ The synthetic warps exercise no viewpoint change and no
+Facts a reviewer should still weigh: the frozen matcher is strong on the easy tier and fails on the rotated one — precision at 3 px 0.750 over the split (0.999 easy, 0.500 hard), 582 matches per pair, homography accuracy 0.708 — against 0.624 for its own keypoints matched by descriptor nearest neighbour, 0.346 for a patch nearest neighbour and 0.006 for the identity guess; the bounded adaptation moved precision at 3 px from 0.750 to 0.765 (+0.015) with epoch 2 kept, homography accuracy at 3 px 0.708 → 0.698 and 582 → 579 matches per pair; on the rotated tier 0.500 → 0.532 (homography accuracy 0.417 → 0.396), on the easy tier 0.999 → 0.998. The 48-pair validation split's epoch history (validation precision at 3 px moved 0.723 → 0.735 → 0.745 → 0.732 over epochs 0–3 and homography accuracy 0.729 → 0.708 → 0.708 → 0.688, differences of a few pairs in 48) is what "no dispersion estimate" means here. The synthetic warps exercise no viewpoint change and no
 occlusion; the 48-pair validation split that picks the epoch is small and the 96-pair test split gives no dispersion
 estimate; the drawn pair re-matched after adaptation is one image of evidence about behaviour outside the corpus, not
 a measurement.

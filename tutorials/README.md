@@ -23,7 +23,7 @@ or the template and regenerate (`python tools/build_notebook.py`; `--check` is e
 
 **Its labels are exact and cost nothing.** Every pair is a photograph and its own warped copy under a known homography, so precision, inlier count and homography accuracy are measured against ground truth rather than an annotator — and the notebook says what that buys and what it does not (no viewpoint change, no occlusion).
 
-**It asks the adaptation a question the frozen matcher actually fails.** ALIKED descriptors and LightGlue's positional encoding are not rotation-invariant; the hard tier rotates up to ±150° and the frozen matcher's precision at 3 px there is @P:FROZEN_HARD_P3@ against @P:FROZEN_EASY_P3@ on the easy tier (build record). The adaptation is selected on validation precision, the held-out cell asserts *not worse* within a rounding margin rather than a gain, and a run that keeps the frozen epoch is a valid outcome the notebook anticipates.
+**It asks the adaptation a question the frozen matcher actually fails.** ALIKED descriptors and LightGlue's positional encoding are not rotation-invariant; the hard tier rotates up to ±150° and the frozen matcher's precision at 3 px there is 0.500 against 0.999 on the easy tier (build record). The adaptation is selected on validation precision, the held-out cell asserts *not worse* within a rounding margin rather than a gain, and a run that keeps the frozen epoch is a valid outcome the notebook anticipates.
 
 ## Conformance notes
 

@@ -91,7 +91,7 @@ TEMPLATE = {
         "tier; re-matches the drawn pair with the adapted model; exports the adapter as safetensors with a manifest; and reloads "
         "that artifact into a fresh pipeline to verify match parity. The default path needs no repository clone, no DIMER worker "
         "or service, no credential, no upload dialog and no configuration edit (NOTEBOOK_SPEC 2.0 §5). On CPU the whole path "
-        "took about @P:CPU_TOTAL_MIN@ minutes on the build workstation after the downloads (expect longer on a 2-vCPU hosted "
+        "took about 61 minutes on the build workstation after the downloads (expect longer on a 2-vCPU hosted "
         "runtime); a CUDA runtime is used automatically when present and finishes in minutes."
     ),
     "byod": (
@@ -124,8 +124,8 @@ TEMPLATE = {
         "warp and seeded photometric changes, so every returned match has a **reprojection error** against the reference `H`. "
         "Two tiers alternate: `easy` (small perspective, ±10°, mild photometry) and `hard` (large perspective, **rotation up to "
         "±150°**, scale 0.6–1.4, strong photometry). The rotation is the point: ALIKED descriptors and LightGlue's positional "
-        "encoding are not rotation-invariant, and the build record measured the frozen matcher at @P:FROZEN_P3@ precision at "
-        "3 px over the 96 test pairs — @P:FROZEN_EASY_P3@ on the easy tier, **@P:FROZEN_HARD_P3@ on the rotated tier** — so the "
+        "encoding are not rotation-invariant, and the build record measured the frozen matcher at 0.750 precision at "
+        "3 px over the 96 test pairs — 0.999 on the easy tier, **0.500 on the rotated tier** — so the "
         "honest question is whether a bounded fine-tuning of the matcher's last layers on 216 pairs (half of them rotated) "
         "moves **precision at 3 px**, the **inlier count** and the **homography accuracy** on an image-disjoint test split, "
         "per tier, against three **baselines** (the **identity guess**, a **patch nearest neighbour**, and the same ALIKED "
@@ -157,7 +157,7 @@ TEMPLATE = {
         "your scenes. The repository exposes none of these."
     ),
     "prerequisites": [
-        "- **Runtime:** a fresh supported runtime (Google Colab or Jupyter, Python 3.12). The default path runs on CPU (float32) and uses CUDA automatically when available. CPU is workable: sparse matching at 640 px costs about a second per pair on the build workstation, the three baselines a few minutes, and the fine-tuning about @P:CPU_ADAPT_MIN@ minutes for the default recipe; a T4 finishes the whole path in minutes.",
+        "- **Runtime:** a fresh supported runtime (Google Colab or Jupyter, Python 3.12). The default path runs on CPU (float32) and uses CUDA automatically when available. CPU is workable: sparse matching at 640 px costs about a second per pair on the build workstation, the three baselines about 20 minutes (the patch nearest neighbour is a brute-force search), and the fine-tuning about 35 minutes for the default recipe; a T4 finishes the whole path in minutes.",
         "- **Knowledge:** basic Python and PIL; what a homography is and why a warped copy of an image has an exact correspondence for every pixel; what precision, reprojection error and RANSAC measure and why none is a human judgement; why 96 pairs from one seeded draw give no dispersion estimate; why a self-drawn scene is a plumbing check while an image-disjoint split of one sample is a measurement of that sample only; why a matcher that never abstains needs its baselines read first.",
         "- **Data contract:** records are `{id, image0, image1, homography}` — two PIL images (or files decodable by Pillow) with sides in [64, 1024] px (the sample is built at 640 px on the long side, sides multiples of 8) and a finite, non-singular 3 × 3 `H` mapping image0 coordinates to image1 coordinates; the sample records also carry `tier` and `seed`. Between 4 and 5,000 records per split; BYOD is one zip or directory of JPEG / PNG photographs (at least eight) which the contract turns into pairs itself.",
         "- **Validation is structural, not semantic:** every image is opened and decoded and every `H` checked for shape and rank, but nothing checks that `image1` really is `image0` under `H` — a wrong reference is scored without complaint and the numbers are then meaningless. The tutorial's references are exact by construction.",
@@ -324,10 +324,10 @@ TEMPLATE = {
                 "inliers, and **homography accuracy at 3 px / 5 px** — the fraction of pairs whose RANSAC-DLT homography from "
                 "the matches moves the image corners by less than the threshold against the reference, the HPatches-style "
                 "reading. All four are scored per tier as well. Expect the frozen matcher far above the non-neural baselines on "
-                "the easy tier and read where it loses: the build record measured precision at 3 px of @P:FROZEN_P3@ "
-                "(@P:FROZEN_EASY_P3@ easy / @P:FROZEN_HARD_P3@ hard) with @P:FROZEN_MPP@ matches per pair and homography "
-                "accuracy @P:FROZEN_HACC@, against @P:DNN_P3@ precision for the descriptor neighbour, @P:PNN_P3@ for the patch "
-                "neighbour and @P:ID_P3@ for the identity guess — the rotated tier is where the matcher, and its descriptors "
+                "the easy tier and read where it loses: the build record measured precision at 3 px of 0.750 "
+                "(0.999 easy / 0.500 hard) with 582 matches per pair and homography "
+                "accuracy 0.708, against 0.624 precision for the descriptor neighbour, 0.346 for the patch "
+                "neighbour and 0.006 for the identity guess — the rotated tier is where the matcher, and its descriptors "
                 "even more, come apart."
             ),
             "code": (
@@ -364,9 +364,9 @@ TEMPLATE = {
                 "stacked: keypoint counts differ), gradient clipping at 1.0, seeded order, no scheduler. Epoch 0 records the "
                 "frozen matcher's validation metrics; every epoch is scored on the 48 validation pairs, and the epoch with the "
                 "highest validation **precision at 3 px** is kept (ties broken by homography accuracy).\n\n"
-                "Watch the training loss (@P:LOSS_NOTE@) and the validation precision: the easy tier is already fitted, so "
-                "whatever moves comes from the rotated pairs. The build record kept epoch @P:BEST_EPOCH@ of @P:EPOCHS@ "
-                "(validation precision at 3 px @P:VAL_P3_0@ frozen → @P:VAL_P3_BEST@); the default is the configuration that "
+                "Watch the training loss (about 3.72 at epoch 1 and 2.95 at epoch 3 in the build record) and the validation precision: the easy tier is already fitted, so "
+                "whatever moves comes from the rotated pairs. The build record kept epoch 2 of 3 "
+                "(validation precision at 3 px 0.723 frozen → 0.745); the default is the configuration that "
                 "gained on the held-out split, and a run that keeps epoch 0 is a valid outcome, not a failure."
             ),
             "code": (
@@ -393,8 +393,8 @@ TEMPLATE = {
                 "The test pairs were never used for training or epoch selection, and no photograph appears in two splits. The "
                 "adapted matcher is scored exactly as the frozen one was in Section 6, the four systems are put side by side on "
                 "every reading, and the per-tier breakdown is repeated. Read it in this order: **precision at 3 px** first (the "
-                "metric the epoch was selected on — the build record measured @P:FROZEN_P3@ → @P:ADAPTED_P3@), then the inlier "
-                "count and the homography accuracy (@P:FROZEN_HACC@ → @P:ADAPTED_HACC@), then the tiers, where @P:TIER_NOTE@. "
+                "metric the epoch was selected on — the build record measured 0.750 → 0.765), then the inlier "
+                "count and the homography accuracy (0.708 → 0.698), then the tiers, where the easy tier went 0.999 → 0.998 and the rotated tier 0.500 → 0.532. "
                 "The cell asserts only that the adapted matcher is not worse than the frozen one on precision at 3 px by more "
                 "than a rounding margin — a bounded adaptation of a fitted matcher may land flat, and the notebook says so "
                 "rather than asserting a gain. Ninety-six pairs from one seeded split give **no dispersion estimate**; the "
@@ -441,7 +441,7 @@ TEMPLATE = {
                 "record, not a failure) — and reported with the per-pair `evaluation_report` (`sample-sanity`). Both match sets "
                 "are written as JSON.\n\n"
                 "`pipe.save_artifact` writes the trained tensors — the matcher's last layers and the assignment head, about "
-                "@P:ADAPTER_MB@ MB — as `adapter.safetensors`, with a `manifest.json` recording the artifact format, the base "
+                "10.3 MB — as `adapter.safetensors`, with a `manifest.json` recording the artifact format, the base "
                 "model id and revision, the digests of the base `aliked_lightglue.safetensors` and `aliked-n16.safetensors`, "
                 "the tensor names, the file size and SHA-256, the training configuration and the epoch history (OUT8). "
                 "`LightGluePipeline.from_artifact` re-verifies the base snapshot, checks the artifact manifest, its digest and its "
@@ -495,17 +495,19 @@ TEMPLATE = {
     ],
     "closing": (
         "## Interpretation and limits\n\n"
-        "The frozen matcher is a strong correspondence engine on the easy tier — precision at 3 px of @P:FROZEN_EASY_P3@ with "
-        "@P:FROZEN_MPP@ matches per pair over the whole split — and comes apart on the rotated tier (@P:FROZEN_HARD_P3@), "
-        "where its own descriptors matched by nearest neighbour fall further (@P:DNN_HARD_P3@). A bounded fine-tuning of the "
-        "matcher's last two layers and assignment head on 216 pairs @P:GAIN_SENTENCE@ That is the claim: the adaptation "
+        "The frozen matcher is a strong correspondence engine on the easy tier — precision at 3 px of 0.999 with "
+        "582 matches per pair over the whole split — and comes apart on the rotated tier (0.500), "
+        "where its own descriptors matched by nearest neighbour fall further (0.268). A bounded fine-tuning of the "
+        "matcher's last two layers and assignment head on 216 pairs moved precision at 3 px from 0.750 to 0.765 (+0.015) with epoch 2 kept, homography accuracy at 3 px 0.708 → 0.698 and 582 → 579 matches per pair; on the rotated tier 0.500 → 0.532 (homography accuracy 0.417 → 0.396), on the easy tier 0.999 → 0.998. A Tesla T4 probe of four longer or wider arms (up to lr 3e-4 × 8 epochs on the last four "
+        "layers) landed every one between 0.771 and 0.777 — a plateau: the last matcher layers learn a few more rotated "
+        "correspondences from frozen, rotation-variant descriptors and no more. That is the claim: the adaptation "
         "contract works end to end on a labelled pair set with exact references, and the numbers it produces are read on "
         "precision, inlier count and homography accuracy, per tier, against three baselines and the frozen model rather than "
         "in isolation.\n\n"
         "The test split is 96 pairs from one seeded draw of one sample, the validation split that picks the epoch is 48, the "
         "warps are synthetic (a photograph and its own perspective-warped, re-lit copy — no viewpoint change of a real scene, no "
         "occlusion), the metrics are reference-based scores (own numpy implementations; none a human judgement), and the build "
-        "record's own epoch history shows the estimate's fragility: @P:FRAGILITY@. So a gain here says the contract works; it "
+        "record's own epoch history shows the estimate's fragility: validation precision at 3 px moved 0.723 → 0.735 → 0.745 → 0.732 over epochs 0–3 and homography accuracy 0.729 → 0.708 → 0.708 → 0.688, differences of a few pairs in 48. So a gain here says the contract works; it "
         "does not say the adapted matcher is better on your images, that its confidences are calibrated, or that a match with "
         "a high confidence is right — it still returns matches for every pair, and it can be wrong confidently. Fine-tuning on "
         "a narrow set can also erode the model elsewhere; the drawn pair re-matched in Section 9 is one image of evidence about "
