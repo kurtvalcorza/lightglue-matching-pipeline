@@ -1,0 +1,42 @@
+[project]
+name = "lightglue-matching-pipeline"
+version = "0.1.0"
+description = "DIMER-oriented LightGlue + ALIKED sparse image-matching pipeline: audited checkpoint conversion, homography-supervised evaluation and bounded matcher fine-tuning."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Kurt Valcorza" }]
+keywords = ["lightglue", "aliked", "image-matching", "feature-correspondence", "homography", "dimer"]
+dependencies = [
+    "numpy==2.5.3",
+    "pillow==11.3.0",
+    "safetensors==0.8.0",
+    "torch==2.14.0",
+    "torchvision==0.29.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==8.4.2", "ruff==0.16.6"]
+
+[build-system]
+requires = ["setuptools==78.1.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: downloads and runs the real pinned LightGlue + ALIKED checkpoints",
+]
