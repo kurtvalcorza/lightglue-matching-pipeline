@@ -14,7 +14,7 @@ The wrapper code in this repository is MIT licensed. The model weights and the v
 
 ## Status
 
-**Candidate.** The inference contract, the homography-supervised evaluation, the adaptation contract, the pickle audit and conversion and the real pinned checkpoints have been exercised on the build workstation's CPU only (the unit and model-backed suites, and the default tutorial path through the package API — `MODEL_CARD.md` item 9). No GPU has run this repository yet and no clean hosted runtime has executed the committed notebook blob; both are what promotion to Release-grade requires (`docs/release-verification.md`). Production HTTP serving / DIMER worker packaging remains out of scope.
+**Release-grade.** The inference contract, the homography-supervised evaluation, the adaptation contract, the pickle audit and conversion and the real pinned checkpoints have been exercised on the build workstation's CPU (the unit and model-backed suites, and the default tutorial path through the package API) and — for the `E2E` standalone tutorial at blob `d5e562ea` — in a clean Kaggle Tesla T4 runtime on 2026-09-21 (recorded in `docs/release-verification.md`). A later notebook revision returns to Candidate until a clean-runtime execution of that exact blob is recorded. Production HTTP serving / DIMER worker packaging remains out of scope.
 
 ## Three things to know before you start
 
@@ -68,7 +68,7 @@ The default path runs on CPU and uses CUDA automatically when present (about 61 
 
 ## Release status
 
-**Candidate** — not yet executed in a clean hosted runtime. The `E2E` notebook is generated, parity-checked and unit-tested, and the default path has been run on the build workstation's CPU through the package API, but static and unit checks — including the standalone generator parity checks — are necessary, not the evidence; the hosted run is. The status becomes Release-grade when a clean Kaggle / Colab execution of the committed notebook blob is recorded in `docs/release-verification.md`; a later change to the carried modules or the notebook returns it to Candidate.
+**Release-grade** — the `E2E` notebook blob `d5e562ea` (committed at `22f03c5`) executed top-to-bottom in a clean Kaggle Tesla T4 runtime on 2026-09-21 (15/15 ok (1 restart after install cell), 1284.6 s); the record is in `docs/release-verification.md` and `STATUS.md`. Static and unit checks — including the standalone generator parity checks — are necessary but were never the evidence; the hosted run is. A later change to the carried modules or the notebook returns the status to Candidate until re-verified.
 
 ## Weights layout
 
