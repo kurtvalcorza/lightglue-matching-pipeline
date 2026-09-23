@@ -54,7 +54,7 @@ The primary intended uses of this pipeline comprise four technical capabilities:
 2. Homography-supervised evaluation (`LightGluePipeline.evaluate`, `evaluate_baselines`): Scoring `{id, image0, image1, homography}` records with exact references on precision, inlier count, median error and homography accuracy, and the same readings for the identity-guess, patch-nearest-neighbour and descriptor-nearest-neighbour baselines.
 3. Bounded supervised fine-tuning (`LightGluePipeline.adapt`, `save_artifact`, `from_artifact`): Adapting the matcher's last layers and assignment head to a labelled pair set with the LightGlue assignment loss and validation-based epoch selection, exporting the adapter, and reloading it with verified parity.
 4. Pair synthesis with exact references (`samples.make_pair`, `make_pairs`, `build_sample_dataset`): Turning photographs into homography pairs with seeded geometric and photometric changes, so a matcher can be scored without manual annotation.
-Target application domains include image registration and stitching research, evaluation of matchers under controlled warps, teaching material about sparse matching and its failure modes, and reproducible experiments on bounded adaptation within the DIMER platform.
+Target application domains include image registration and stitching research, evaluation of matchers under controlled warps, teaching material about sparse matching and its failure modes, and reproducible experiments on bounded adaptation.
 
 ###### Primary Intended Users
 
