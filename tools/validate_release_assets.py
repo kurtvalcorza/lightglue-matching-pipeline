@@ -392,27 +392,36 @@ def validate_identity_consistency() -> None:
 WEIGHT_DOCS = ("README.md", "MODEL_CARD.md", "docs/WEIGHTS.md")
 EXTERNAL_WEIGHT_BYTES: dict[int, str] = {
     10_273_700: "adapter.safetensors from save_artifact (default two layers + assignment head)",
+    39_223_447: "360 pinned iNaturalist photographs in lightglue_pipeline/samples.py in total",
 }
-EXTERNAL_WEIGHT_DIGESTS: dict[str, str] = {
-    "3c8ca40c0c985cd4d641e96e4b408b14d067b5b3521ac17b36590447d49d115a": "converted aliked-n16.safetensors (regenerated)",
-    "5b9f0ba08490293d6c17b9cef219991e1a6edda31609429679f8dca1af5a7b10": "pickle-audit digest of aliked-n16.pth globals",
-    "9c630a386c74c534428370ce46253e1d0968655db180f97074cb6ad797bd2bc6": "converted aliked_lightglue.safetensors (regenerated)",
-    "e7b998d087a5dcadd37713daf30b63cc571160c3180ebc138500ab662197e932": "pickle-audit digest of aliked_lightglue.pth globals",
-}
-_DIGEST = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{64}(?![0-9a-fA-F])")
+EXTERNAL_WEIGHT_DIGESTS: dict[str, str] = {}
+_DIGEST = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{64}(?![0-9a-fA-F])", re.IGNORECASE)
 _GROUPED = r"(\d{1,3}(?:[,\u202f\u00a0 ]\d{3})+|\d+)"
-_BYTE_COUNT = re.compile(r"(?<![\d,\-])" + _GROUPED + r"\s*bytes\b|totalBytes`?\s*" + _GROUPED)
+_BYTE_COUNT = re.compile(
+    r"(?<![\d,\-])" + _GROUPED + r"\s*(?:bytes?\b|B\b)"
+    + r"|totalBytes[`\"]?\s*[:=]?\s*" + _GROUPED
+)
 
 
 def _manifest_facts(root: Path = ROOT) -> tuple[set[str], set[int]]:
     digests: set[str] = set()
     sizes: set[int] = set()
+
+    def collect(value: object) -> None:
+        if isinstance(value, dict):
+            for key, nested in value.items():
+                normalized_key = key.lower()
+                if normalized_key.endswith("sha256") and isinstance(nested, str) and _DIGEST.fullmatch(nested):
+                    digests.add(nested.lower())
+                if normalized_key.endswith("bytes") and isinstance(nested, int) and not isinstance(nested, bool):
+                    sizes.add(nested)
+                collect(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                collect(nested)
+
     for path in sorted(root.glob("weights/*/dimer-base-manifest.json")):
-        manifest = json.loads(_read(path))
-        sizes.add(manifest["totalBytes"])
-        for entry in manifest["files"]:
-            digests.add(entry["sha256"])
-            sizes.add(entry["bytes"])
+        collect(json.loads(_read(path)))
     return digests, sizes
 
 
@@ -427,7 +436,7 @@ def validate_weight_facts(root: Path = ROOT) -> None:
         if not path.exists():
             continue
         text = _read(path)
-        found_digests = set(_DIGEST.findall(text))
+        found_digests = {digest.lower() for digest in _DIGEST.findall(text)}
         found_sizes = {int(re.sub(r"[,\u202f\u00a0 ]", "", m.group(1) or m.group(2))) for m in _BYTE_COUNT.finditer(text)}
         cited_digests |= found_digests
         cited_sizes |= found_sizes
