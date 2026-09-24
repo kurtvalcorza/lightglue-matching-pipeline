@@ -1,5 +1,5 @@
+# ruff: noqa: E501,I001
 """Generate the DIMER multi-model image-matching workshop notebook."""
-# ruff: noqa: E501
 from __future__ import annotations
 import argparse
 import json
