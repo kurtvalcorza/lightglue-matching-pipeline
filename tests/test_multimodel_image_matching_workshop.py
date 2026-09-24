@@ -1,5 +1,5 @@
+# ruff: noqa: E501,I001
 """Static contract tests for the comparative image-matching workshop."""
-# ruff: noqa: E501
 from __future__ import annotations
 import json
 import subprocess
