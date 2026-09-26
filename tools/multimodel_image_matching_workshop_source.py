@@ -3,7 +3,11 @@
 CELLS = [
   {
     "kind": "markdown",
-    "source": "# DIMER Workshop: Comparing Image Matching Models\n\n**Profile:** `TASK-INFERENCE`  \n**Mode:** `WORKSHOP`  \n**Notebook specification:** `2.1`  \n**Status:** Candidate  \n**Recommended runtime:** NVIDIA Tesla T4 or equivalent\n\nThis standalone notebook compares two live DIMER image-matching capabilities under **one shared geometric experiment**:\n\n- **LightGlue + ALIKED** — sparse local-feature matching\n- **XoFTR** — detector-free semi-dense matching\n\nThe central question is:\n\n> Given exactly the same pair of images and the same known geometric transformation, how do sparse and detector-free matchers differ in correspondence accuracy, match density, geometric robustness, and compute cost?\n\n### Controlled comparison\n\nBoth models receive the same source photographs, deterministic image split, rendered image-pair bytes, reference homography, three difficulty tiers, geometric thresholds, RANSAC-DLT evaluator, and model-neutral baselines. Model-native preprocessing stays inside the matching backend.\n\n### Standalone contract\n\nThe canonical path does **not** clone a repository, fetch DIMER source, call a DIMER worker/API, require credentials, or require an upload. It carries the exact 360-photo corpus manifest inline, verifies every built-in photograph by byte size + SHA-256, creates all reference geometry locally, and evaluates both matchers locally.\n\n### Candidate execution backend\n\nThe comparative frontend is pinned to **`vismatch==1.3.2`**, which exposes both `aliked-lightglue` and `xoftr` through one common API. The notebook records the intended live-DIMER model identities and DIMER checkpoint digests alongside the actual backend. **Exact checkpoint parity with the DIMER-served assets is a release-qualification gate**, not an assumption.\n\nAll measured results are **tutorial/sample-sanity evidence**, not benchmark or production-fitness claims."
+    "source": "# DIMER Notebook: Comparing Image Matching Models\n\n**Profile:** `TASK-INFERENCE`  \n**Mode:** `WORKSHOP`  \n**Notebook specification:** `2.1`  \n**Status:** Candidate  \n**Recommended runtime:** NVIDIA Tesla T4 or equivalent\n\nThis standalone notebook compares two live DIMER image-matching capabilities under **one shared geometric experiment**:\n\n- **LightGlue + ALIKED** — sparse local-feature matching\n- **XoFTR** — detector-free semi-dense matching\n\nThe central question is:\n\n> Given exactly the same pair of images and the same known geometric transformation, how do sparse and detector-free matchers differ in correspondence accuracy, match density, geometric robustness, and compute cost?\n\n### Controlled comparison\n\nBoth models receive the same source photographs, deterministic image split, rendered image-pair bytes, reference homography, three difficulty tiers, geometric thresholds, RANSAC-DLT evaluator, and model-neutral baselines. Model-native preprocessing stays inside the matching backend.\n\n### Standalone contract\n\nThe canonical path does **not** clone a repository, fetch DIMER source, call a DIMER worker/API, require credentials, or require an upload. It carries the exact 360-photo corpus manifest inline, verifies every built-in photograph by byte size + SHA-256, creates all reference geometry locally, and evaluates both matchers locally.\n\n### Candidate execution backend\n\nThe comparative frontend is pinned to **`vismatch==1.3.2`**, which exposes both `aliked-lightglue` and `xoftr` through one common API. The notebook records the intended live-DIMER model identities and DIMER checkpoint digests alongside the actual backend. **Exact checkpoint parity with the DIMER-served assets is a release-qualification gate**, not an assumption.\n\nAll measured results are **tutorial/sample-sanity evidence**, not benchmark or production-fitness claims."
+  },
+  {
+    "kind": "markdown",
+    "source": "## How to use this notebook\n\n**Who it is for.** Learners who can run Python cells in Colab/Jupyter and are new to local features, image correspondence, or geometric matching.\n\n**Runtime.** Use the documented GPU runtime for the comparative model path.\n\n**How to run it.**\n1. Select the documented runtime/accelerator.\n2. Choose **Run all** for the canonical path; the defaults are the reference settings.\n3. Read the explanation around each learning stage while the cells execute.\n4. Cells marked **Infrastructure** handle setup, model acquisition, provenance, or orchestration. You may run those cells without understanding their implementation.\n\n### Task at a glance\n\n`image pair → model correspondences → geometric evaluation → match-quality and runtime comparison`\n\n### Roadmap\n\n1. Understand the task, inputs, outputs, and evaluation boundary.\n2. Inspect and validate the built-in sample.\n3. Establish the simple reference/baseline where applicable.\n4. Run the model or model comparison.\n5. Inspect errors, disagreements, robustness, or resource tradeoffs.\n6. Try one controlled change and explain what changed.\n7. Write an evidence-based conclusion, then optionally try your own compatible data.\n\n### What successful execution looks like\n\nYou should finish with validated sample/input evidence, the notebook's principal baseline/reference result, model outputs and comparison metrics, at least one diagnostic or qualitative view, and machine-readable results/provenance where the capability supports them. Exact numeric values may vary slightly with the supported runtime; interpret the pattern and the stated metric semantics rather than treating one number as universal.\n"
   },
   {
     "kind": "markdown",
@@ -23,7 +27,7 @@ CELLS = [
   },
   {
     "kind": "markdown",
-    "source": "## 2. Model identities\n\n### LightGlue + ALIKED\n\nDIMER identity: `cvg/LightGlue`, release `v0.1_arxiv`; LightGlue code revision `eb42fee2d71449efb0aa5c10549752b5d75384d8`; ALIKED source commit `683d7c65197395c0b3f01ebe76e1084a27e73a65`.\n\nDIMER converted assets:\n\n- `aliked_lightglue.safetensors` — 47,564,948 bytes — SHA-256 `9c630a386c74c534428370ce46253e1d0968655db180f97074cb6ad797bd2bc6`\n- `aliked-n16.safetensors` — 2,719,928 bytes — SHA-256 `3c8ca40c0c985cd4d641e96e4b408b14d067b5b3521ac17b36590447d49d115a`\n\n### XoFTR\n\nDIMER identity: `vismatch/xoftr` @ `d8ee7d89be3c9e5c157db3886db1c0f0e038b321`; upstream code revision `e0fbea431b30be9742effbf5577c90aa8eb938f9`; `xoftr_640.safetensors` — 44,419,304 bytes — SHA-256 `4d5ed62e8b41f862ecc5c660e31f1c450402966623d6a28e85acf7fbd794cc69`."
+    "source": "## 2. Model identities\n\n### LightGlue + ALIKED\n\nDIMER identity: `cvg/LightGlue`, release `v0.1_arxiv`; LightGlue code revision `eb42fee2d71449efb0aa5c10549752b5d75384d8`; ALIKED source commit `683d7c65197395c0b3f01ebe76e1084a27e73a65`.\n\nDIMER converted assets:\n\n- `aliked_lightglue.safetensors` — 47,564,948 bytes — SHA-256 `9c630a386c74c534428370ce46253e1d0968655db180f97074cb6ad797bd2bc6`\n- `aliked-n16.safetensors` — 2,719,928 bytes — SHA-256 `3c8ca40c0c985cd4d641e96e4b408b14d067b5b3521ac17b36590447d49d115a`\n\n### XoFTR\n\nDIMER identity: `vismatch/xoftr` @ `d8ee7d89be3c9e5c157db3886db1c0f0e038b321`; upstream code revision `e0fbea431b30be9742effbf5577c90aa8eb938f9`; `xoftr_640.safetensors` — 44,419,304 bytes — SHA-256 `4d5ed62e8b41f862ecc5c660e31f1c450402966623d6a28e85acf7fbd794cc69`.\n\n> **Infrastructure.** This section supports reproducibility and execution. Run the associated setup code as written; understanding its implementation is not a learning objective for this notebook."
   },
   {
     "kind": "code",
@@ -75,7 +79,7 @@ CELLS = [
   },
   {
     "kind": "markdown",
-    "source": "## 8. Common geometric evaluator and model-neutral baselines\n\nRequired readings are precision@1/3/5px, matches/pair, 3-px inliers/pair, median inlier reprojection error, and seeded RANSAC-DLT homography accuracy@3/5px.\n\nTwo model-neutral baselines use the same evaluator:\n\n1. identity guess;\n2. grayscale patch nearest-neighbour by normalized cross-correlation."
+    "source": "## 8. Common geometric evaluator and model-neutral baselines\n\nRequired readings are precision@1/3/5px, matches/pair, 3-px inliers/pair, median inlier reprojection error, and seeded RANSAC-DLT homography accuracy@3/5px.\n\nTwo model-neutral baselines use the same evaluator:\n\n1. identity guess;\n2. grayscale patch nearest-neighbour by normalized cross-correlation.\n\n> **Before you run it:** predict whether this simple reference will be easy or difficult for the learned model(s) to beat. After the result appears, record the baseline value before looking at the more complex model comparison."
   },
   {
     "kind": "code",
@@ -91,7 +95,7 @@ CELLS = [
   },
   {
     "kind": "markdown",
-    "source": "## 10. Build the isolated comparative matching environment\n\nThe model frontend runs in a separate Python 3.12 environment, built with `uv` whatever Python the notebook kernel uses, pinned to `vismatch==1.3.2`, `torch==2.14.0`, and `torchvision==0.29.0`."
+    "source": "## 10. Build the isolated comparative matching environment\n\nThe model frontend runs in a separate Python 3.12 environment, built with `uv` whatever Python the notebook kernel uses, pinned to `vismatch==1.3.2`, `torch==2.14.0`, and `torchvision==0.29.0`.\n\n> **Infrastructure.** This section supports reproducibility and execution. Run the associated setup code as written; understanding its implementation is not a learning objective for this notebook."
   },
   {
     "kind": "code",
@@ -99,7 +103,7 @@ CELLS = [
   },
   {
     "kind": "markdown",
-    "source": "## 11. Standalone model runner\n\nThe runner writes one NPZ per pair with only `kpts0`, `kpts1`, and `confidence`. All scoring remains in the common notebook evaluator. It also searches the runtime package/cache for filenames known to the current DIMER profiles and records any direct digest parity it can establish. An unlocated file is reported as `not-located`, never as verified."
+    "source": "## 11. Standalone model runner\n\nThe runner writes one NPZ per pair with only `kpts0`, `kpts1`, and `confidence`. All scoring remains in the common notebook evaluator. It also searches the runtime package/cache for filenames known to the current DIMER profiles and records any direct digest parity it can establish. An unlocated file is reported as `not-located`, never as verified.\n\n> **Infrastructure.** This section supports reproducibility and execution. Run the associated setup code as written; understanding its implementation is not a learning objective for this notebook."
   },
   {
     "kind": "code",
@@ -119,7 +123,7 @@ CELLS = [
   },
   {
     "kind": "markdown",
-    "source": "## 13. Freeze before the independent test\n\nThe frozen record fixes corpus identity, split, pair-generation tiers/seeds, model identities, execution backend, known DIMER checkpoint digests, geometric thresholds, RANSAC settings, baselines, and validation observations."
+    "source": "## 13. Freeze before the independent test\n\nThe frozen record fixes corpus identity, split, pair-generation tiers/seeds, model identities, execution backend, known DIMER checkpoint digests, geometric thresholds, RANSAC settings, baselines, and validation observations.\n\n> **What to notice.** Compare the model result with the stated baseline/reference first. Then inspect the secondary metric or diagnostic that explains *how* the result was achieved; do not infer a universal model ranking from one sample and configuration."
   },
   {
     "kind": "code",
@@ -167,7 +171,7 @@ CELLS = [
   },
   {
     "kind": "markdown",
-    "source": "## 18. Match density and runtime"
+    "source": "## 18. Match density and runtime\n\n> **Infrastructure.** This section supports reproducibility and execution. Run the associated setup code as written; understanding its implementation is not a learning objective for this notebook."
   },
   {
     "kind": "code",
@@ -199,7 +203,7 @@ CELLS = [
   },
   {
     "kind": "markdown",
-    "source": "## 24. Export provenance and report bundle"
+    "source": "## 24. Export provenance and report bundle\n\n> **Infrastructure.** This section supports reproducibility and execution. Run the associated setup code as written; understanding its implementation is not a learning objective for this notebook."
   },
   {
     "kind": "code",
@@ -211,10 +215,26 @@ CELLS = [
   },
   {
     "kind": "markdown",
+    "source": "## Try it yourself — one controlled change\n\nUse the same discipline as the main experiment:\n\n**Predict → change one variable → rerun → observe → explain**\n\nIn the correspondence-visualization section, inspect one easier pair and one harder pair from the notebook's generated difficulty tiers. Before viewing the matches, predict which pair will have fewer geometrically consistent correspondences. Compare the visual result and the quantitative inlier/match statistics, then explain the difference.\n\nKeep this exercise separate from the frozen canonical test result. If you use validation or an optional post-test exercise to explore a setting, do not retroactively present the changed setting as the pre-registered canonical result.\n"
+  },
+  {
+    "kind": "markdown",
+    "source": "## Self-paced checkpoint\n\nBefore reading the sample interpretation, answer in your own words:\n\n1. What was the model or system asked to do?\n2. Which baseline/reference tells you whether the model added useful capability?\n3. What is the most important failure mode or tradeoff visible in this notebook?\n4. What would you need to test before applying the result to a different dataset or operational setting?\n\n<details>\n<summary><b>Show a sample interpretation</b></summary>\n\nMore raw matches do not automatically mean better matching. Give more weight to geometrically consistent correspondences and failure patterns across difficulty tiers than to match count alone.\n\nA complete answer should cite the outputs from **your run**, because small numerical differences can occur across supported runtimes.\n\n</details>\n"
+  },
+  {
+    "kind": "markdown",
+    "source": "## Write an evidence-based conclusion\n\nUse the outputs from your run rather than declaring a universal winner.\n\n1. **State the question.** What capability or comparison did this notebook test?\n2. **Report the primary result.** Compare the relevant model/system with its baseline or reference on the held-out or otherwise designated evaluation data.\n3. **Add supporting evidence.** Include the most informative secondary metric, error pattern, qualitative diagnostic, or disagreement.\n4. **Account for cost or complexity.** Mention runtime, model footprint, extra stages, or adaptation when they materially affect the comparison.\n5. **State the limits.** Say what this dataset, split, model revision, and configuration do—and do not—support.\n\nCompare the selected matchers on held-out geometric quality and runtime, identify at least one pair type where their behavior differs, and avoid generalizing the result beyond the controlled image corpus and evaluator.\n"
+  },
+  {
+    "kind": "markdown",
     "source": "# Glossary\n\n| Term | Meaning |\n|---|---|\n| Keypoint | Distinctive image coordinate used by sparse feature methods |\n| Descriptor | Vector describing local image appearance |\n| Correspondence | Matched coordinates across two images |\n| Sparse matcher | Matches detected local features, e.g. ALIKED + LightGlue |\n| Detector-free matcher | Predicts matches from image feature grids without a separate detector |\n| Homography | 3×3 projective mapping between planar image coordinates |\n| Reprojection error | Pixel distance from a predicted correspondence to the exact reference warp |\n| Inlier | Match within the chosen geometric threshold |\n| RANSAC | Robust estimator using repeated minimal correspondence samples |\n| DLT | Direct Linear Transform homography estimator |\n| Precision@3px | Fraction of returned matches within 3 px of reference geometry |\n| Sample-sanity evidence | Bounded tutorial measurement, not a benchmark claim |"
   },
   {
     "kind": "code",
     "source": "# @title Run-all completion summary\ncompletion={\"notebook_spec\":\"2.1\",\"profile\":\"TASK-INFERENCE\",\"mode\":\"WORKSHOP\",\"models\":[MODEL_SPECS[k][\"display_name\"] for k in MODEL_KEYS],\"execution_backend\":\"vismatch==1.3.2\",\"dataset_source\":dataset_source,\"photos\":len(photo_records),\"validation_pairs\":len(validation_pair_rows),\"test_pairs\":len(test_pair_rows),\"tiers\":list(TIERS),\"output_directory\":str(OUTPUT_ROOT.resolve()),\"dimer_checkpoint_parity\":\"qualification-required\"}\ndisplay(pd.Series(completion,name=\"value\").to_frame())\nprint(\"Canonical comparative workflow complete. Release still requires clean-runtime execution and exact DIMER asset-parity qualification.\")"
   }
+  {
+    "kind": "markdown",
+    "source": "# Troubleshooting\n\n| What you see | Likely cause | What to do |\n|---|---|---|\n| Accelerator unavailable or the model is unexpectedly slow | The runtime does not match the documented resource envelope | Select the documented accelerator/runtime, start a fresh session, and run the notebook top-to-bottom. |\n| Package/version or stale-module error after installation | The hosted kernel had incompatible libraries imported before the pinned install | Start a fresh runtime and choose **Run all** before importing extra packages. Do not bypass the notebook's version checks. |\n| Model/sample digest or size verification fails | A download is incomplete or upstream bytes differ from the pinned artifact | Remove the affected runtime cache/download and rerun. Do not disable the integrity check. |\n| Out-of-memory / session restart | Too many large models or intermediate objects are resident | Use the default execution tier, follow the notebook's release/unload steps, and avoid enabling optional heavy branches together. |\n| BYOD validation fails | User input does not satisfy the documented schema, shape, labels, or limits | Read the validation message, correct the stated field/shape/format, and rerun the BYOD branch. |\n| Your numbers differ slightly from the example/expectation | Supported hardware or library execution can introduce small numerical variation | Compare the qualitative pattern, metric definitions, split, and model revision before treating the difference as meaningful. |\n"
+  },
 ]
