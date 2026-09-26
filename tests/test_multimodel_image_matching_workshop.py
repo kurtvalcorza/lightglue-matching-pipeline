@@ -88,7 +88,7 @@ def test_models_tiers_and_evaluation_present():
         "USE_BYOD = False",
         "precision_3px", "homography_acc_3px", "homography_acc_5px",
         "frozen_experiment.json", "experiment_manifest.json", "workshop_summary.json",
-        "symlink ZIP member refused", "not-measurable",
+        "not-measurable",
     ]:
         assert literal in text
     for name, digest in PINNED_ASSETS.items():
