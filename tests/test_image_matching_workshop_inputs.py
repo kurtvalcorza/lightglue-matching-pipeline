@@ -85,6 +85,20 @@ def test_zip_path_rejection(tmp_path, name):
         ns["safe_extract_zip"](archive, tmp_path / "out")
 
 
+def test_zip_symlink_rejected_before_extraction(tmp_path):
+    ns = helpers(tmp_path)
+    archive = tmp_path / "symlink.zip"
+    entry = zipfile.ZipInfo("linked.png")
+    entry.create_system = 3
+    entry.external_attr = (0o120777 << 16)
+    with zipfile.ZipFile(archive, "w") as z:
+        z.writestr(entry, "../outside.png")
+    destination = tmp_path / "out"
+    with pytest.raises(ValueError, match="(?i)symlink"):
+        ns["safe_extract_zip"](archive, destination)
+    assert not list(destination.iterdir())
+
+
 def runner_helper():
     node = ast.parse(CELLS[26]["source"]).body[0]
     runner = ast.literal_eval(node.value)
