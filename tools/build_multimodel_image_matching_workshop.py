@@ -11,7 +11,7 @@ NOTEBOOK_NAME="DIMER_MultiModel_Image_Matching_Workshop.ipynb"
 def build_notebook():
     rendered=[]
     for index,cell in enumerate(CELLS):
-        base={"id":f"dimer-matching-workshop-{index:02d}","metadata":{},"source":cell["source"].splitlines(keepends=True)}
+        base={"id":f"dimer-matching-workshop-{index:02d}","metadata":cell.get("metadata",{}),"source":cell["source"].splitlines(keepends=True)}
         if cell["kind"]=="markdown":
             rendered.append({"cell_type":"markdown",**base})
         else:

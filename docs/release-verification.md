@@ -185,3 +185,18 @@ Facts a reviewer should still weigh: the frozen matcher is strong on the easy ti
 occlusion; the 48-pair validation split that picks the epoch is small and the 96-pair test split gives no dispersion
 estimate; the drawn pair re-matched after adaptation is one image of evidence about behaviour outside the corpus, not
 a measurement.
+
+
+## Supplemental multi-model image matching — 2026-09-26 remediation
+
+Applies to `DIMER_MultiModel_Image_Matching_Workshop.ipynb`, not earlier primary-carrier executions. **Candidate** retained; no new hosted or real-weight execution is claimed.
+
+Baseline: release validator PASS. Existing workshop tests could not collect in the system interpreter because the package imports torch, which is absent; no heavy dependency was installed. A separate lightweight suite exercises actual carried loader/split/runner functions without torch.
+
+Confirmed fixes: nondestructive unique BYOD ZIP extraction and output/work trees; 4–360 images with decoded-pixel duplicate rejection; malformed/nonfinite correspondence rejection instead of silently replacing wrong-length confidence; validation-only one-variable guided activity; strict JSON nulls for undefined geometric metrics. The backend acquisition gap was reproduced by reading the exact `vismatch1.3.2` wheel: XoFTR called unpinned `snapshot_download`, and ALIKED/LightGlue loaded URL checkpoints before parity observations. Scoped runner hooks now reject unexpected acquisition calls, stage the already-declared immutable assets, verify bytes and SHA-256 before deserialization, use restricted `weights_only=True` for the two upstream PTH files and safetensors for XoFTR, and restore original loaders even on failure. This does not prove backend behavior equals the primary DIMER safetensors carrier.
+
+Local tests use small image/ZIP fixtures and mocked acquisition/deserialization. They test positive splits and repeated isolated extraction, reencoded duplicate rejection, traversal, invalid correspondence shapes/confidence, disabled baselines, run isolation, successful verified loading, integrity mismatch before loading, unknown URL/repository rejection and restoration. They do not establish real-weight execution, GPU memory fit or hosted qualification.
+
+Remaining qualification: fresh T4 default Run all with exact notebook commit/blob, outputs, package versions, wall/VRAM and verified-assets-consumed provenance; real-model parity against the DIMER carrier; valid BYOD directory/ZIP through the same local model inference and geometric exports, plus an invalid duplicate-image/path case failing before model execution. Keep valid BYOD exports in their unique run directory and report ZIP. REL12 and supported-runtime evidence remain open.
+
+Measured final local checks: **19/19** focused tests passed (exit0), Ruff passed, release validator passed, supplemental generator parity passed, and all code cells/runner parse. BYOD working environments are isolated outside report roots so bundles do not include installed model environments.
