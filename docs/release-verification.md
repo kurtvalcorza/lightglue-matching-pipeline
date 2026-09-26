@@ -160,6 +160,23 @@ stated runtime, not general estimates.
 | 2026-09-20 | package API at the working tree of 2026-09-20 (the XoFTR row's ±35° hard tier, before this row's ±150° tier) | Build workstation CPU | The same replay with the earlier tier: frozen precision at 3 px 0.981 (homography accuracy 0.969, 720 matches per pair), descriptor nearest neighbour 0.884, patch neighbour 0.381, identity 0.007; `adapt(epochs=3, lr=1e-4, trainable_layers=2)` kept epoch 0 (validation 0.981 → 0.976 / 0.976 / 0.979) so adapted = frozen — the finding that made this row rotate its hard tier | 2061.1 s | PASS — pre-flight only; superseded tier |
 | 2026-09-20 | vendored networks and conversion smoke (source before the package existed) | Build workstation CPU | both pickles audited (globals = the fleet's set), converted and loaded strictly into the stitched `modeling.py`; one photograph matched against its warp; a training forward + backward through the matcher | — | PASS — pre-flight only |
 
+### Multi-model image matching workshop
+
+Notebook identity is the Git blob id of `tutorials/DIMER_MultiModel_Image_Matching_Workshop.ipynb` (verify with
+`git rev-parse <commit>:tutorials/DIMER_MultiModel_Image_Matching_Workshop.ipynb`). This notebook is verified
+separately from the primary tutorial above; the saved Colab copy was compared cell by cell with the committed blob
+before it was recorded here.
+
+| Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
+|---|---|---|---|---|---|
+| 2026-09-26 | `4387c12` / `6623fdf1f180` | Google Colab, Tesla T4, Python 3.13.15 kernel (`vismatch==1.3.2` environment on Python 3.12, `cuda`) | Default path: LightGlue + ALIKED and XoFTR at 640 px, built-in 360-photo corpus, 48 validation and 96 test pairs over three tiers, notebook unmodified | not recorded | **PASSED** — 26/26 code cells executed without error; split 216 / 48 / 96 photos; test homography accuracy @3 px LightGlue + ALIKED 0.823, XoFTR 0.719, patch-neighbour baseline 0.333, identity 0.000; precision @3 px 0.818 / 0.665; by tier (LightGlue / XoFTR) easy 1.000 / 1.000, moderate 1.000 / 0.938, rotation-stress 0.469 / 0.219; 0.169 / 0.292 s per pair, peak VRAM 1,669 / 2,968 MiB; report bundle SHA-256 `4076ea4dc46f…`. Checkpoint parity: `aliked-n16.pth` and `xoftr_640.safetensors` located with SHA-256 equal to the DIMER pins; `aliked_lightglue.pth` reported `not-located` because the `lightglue` package caches it as `aliked_lightglue_v0-1_arxiv.pth`, a name the locator does not search (a local `vismatch` run cached that file with the pinned 47,632,827 B and SHA-256 `d975e965b105…`) |
+
+Notebook blob `6623fdf1f180` (from `4387c12`) has a passing Google Colab T4 run of the default path. As for the
+other notebooks, this table is the evidence record: `metadata.dimer.clean_runtime_evidence` stays `pending` as
+authored, because editing it would change the blob this run verifies, and the registry status stays **Candidate**
+until a reviewer promotes it. `dimer_checkpoint_parity` remains `qualification-required` until the LightGlue asset
+is located by the notebook itself.
+
 ## Current status
 
 **Release-grade.** The `E2E` notebook blob `d5e562ea` (committed at `22f03c5`) executed top-to-bottom in a clean Kaggle Tesla T4 runtime on 2026-09-21 (15/15 ok (1 restart after install cell), 1284.6 s, 365 files, 140 MB fetched (GitHub checkpoints + iNaturalist photographs) and digest-verified inside the notebook) with no repository checkout — the REL1/REL10 supported-runtime evidence this file gates on. The CPU pre-flight row above is what preceded it and remains history. Any later change to the carried modules or to the notebook produces a new blob, and the registry returns to **Candidate** until a clean run of that blob is recorded here.
