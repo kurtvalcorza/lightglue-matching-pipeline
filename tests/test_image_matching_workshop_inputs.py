@@ -12,14 +12,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from multimodel_image_matching_workshop_source import CELLS
 
 
+def cell(n):
+    """Look a source cell up by its stable id; inserted cells must not shift these tests."""
+    return next(c for c in CELLS if c.get("id") == f"dimer-matching-workshop-{n:02d}")
+
+
 def helpers(tmp_path):
     ns = {"WORK_ROOT": tmp_path, "Path": Path}
-    module = ast.parse(CELLS[11]["source"])
+    module = ast.parse(cell(11)["source"])
     module.body = [
         n for n in module.body if isinstance(n, (ast.FunctionDef, ast.Import, ast.ImportFrom))
     ]
     exec(compile(module, "loader", "exec"), ns)
-    module = ast.parse(CELLS[13]["source"])
+    module = ast.parse(cell(13)["source"])
     module.body = [n for n in module.body if isinstance(n, ast.FunctionDef)]
     exec(compile(module, "split", "exec"), ns)
     return ns
@@ -100,7 +105,7 @@ def test_zip_symlink_rejected_before_extraction(tmp_path):
 
 
 def runner_helper():
-    node = ast.parse(CELLS[26]["source"]).body[0]
+    node = ast.parse(cell(26)["source"]).body[0]
     runner = ast.literal_eval(node.value)
     module = ast.parse(runner)
     module.body = [
@@ -140,14 +145,14 @@ def test_disabled_baselines_do_not_run(tmp_path):
         "pd": type("Frames", (), {"DataFrame": staticmethod(lambda x: x)}),
         "MODEL_KEYS": [],
     }
-    exec(CELLS[22]["source"], ns)
-    exec(CELLS[34]["source"], ns)
+    exec(cell(22)["source"], ns)
+    exec(cell(34)["source"], ns)
     assert ns["validation_baselines"] == ns["test_baselines"] == {}
 
 
 def test_controls_isolate_byod_outputs(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    source = CELLS[4]["source"].replace("USE_BYOD = False", "USE_BYOD = True")
+    source = cell(4)["source"].replace("USE_BYOD = False", "USE_BYOD = True")
     ns = {}
     exec(source, ns)
     first = ns["OUTPUT_ROOT"]
@@ -166,7 +171,7 @@ def test_source_code_parses():
 
 
 def runner_namespace():
-    runner = ast.literal_eval(ast.parse(CELLS[26]["source"]).body[0].value)
+    runner = ast.literal_eval(ast.parse(cell(26)["source"]).body[0].value)
     ns = {"__name__": "runner_test"}
     exec(runner, ns)
     return ns
@@ -272,7 +277,7 @@ def test_download_digest_failure_never_promotes_cache(tmp_path, monkeypatch):
 def test_strict_json_preserves_undefined_metrics_as_null():
     import math
 
-    module = ast.parse(CELLS[4]["source"])
+    module = ast.parse(cell(4)["source"])
     module.body = [n for n in module.body if isinstance(n, ast.FunctionDef)]
     ns = {"json": json, "math": math}
     exec(compile(module, "json", "exec"), ns)

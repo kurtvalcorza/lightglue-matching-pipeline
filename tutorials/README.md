@@ -70,3 +70,7 @@ The supplemental `DIMER_MultiModel_Image_Matching_Workshop.ipynb` compares froze
 BYOD uses 4–360 JPEG/PNG photographs, 16–4096 pixels per side. ZIP extraction is isolated and nondestructive; duplicate decoded pixels, unsafe paths, duplicate archive members and symlinks fail. The existing full synthetic-pair validation/freeze/test/inference/report route runs in a unique `outputs/byod/run-*` tree, preserving canonical outputs. Match arrays and confidence must have compatible shapes and finite values. Nonfinite geometric summary values are exported as JSON null, meaning not measurable, never zero error.
 
 The guided activity changes only the correctness tolerance on saved validation correspondences; it does not rerun models or revise the frozen test. Infrastructure cells are collapsed. Supported-runtime default/BYOD runs, real checkpoint equivalence and measured performance remain pending.
+
+### 2026-10-02 notebook review fixes
+
+The review in `../docs/reviews/2026-10-02-notebook-review/` (MAT-M1..M3, MAT-m1..m6) is addressed in the generator: BYOD sets of 4–12 photos no longer stop at the tier figures, the canonical report ZIP leaves `outputs/byod/` out, BYOD runs reuse the matcher environment, refusals name the file and rule, metrics and results carry reading guidance, and the tolerance activity is an executable, off-by-default cell (`RUN_TOLERANCE_ACTIVITY`). The notebook blob changed, so the 2026-09-26 Colab runs no longer cover it; it stays **Candidate** until a hosted run of the new blob is recorded.

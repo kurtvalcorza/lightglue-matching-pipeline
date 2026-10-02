@@ -203,3 +203,11 @@ Local tests use small image/ZIP fixtures and mocked acquisition/deserialization.
 Remaining qualification: fresh T4 default Run all with exact notebook commit/blob, outputs, package versions, wall/VRAM and verified-assets-consumed provenance; real-model parity against the DIMER carrier; valid BYOD directory/ZIP through the same local model inference and geometric exports, plus an invalid duplicate-image/path case failing before model execution. Keep valid BYOD exports in their unique run directory and report ZIP. REL12 and supported-runtime evidence remain open.
 
 Measured final local checks: **19/19** focused tests passed (exit0), Ruff passed, release validator passed, supplemental generator parity passed, and all code cells/runner parse. BYOD working environments are isolated outside report roots so bundles do not include installed model environments.
+
+## Supplemental multi-model image matching — 2026-10-02 review fixes
+
+Applies to `DIMER_MultiModel_Image_Matching_Workshop.ipynb` after the review in `docs/reviews/2026-10-02-notebook-review/` (reviewed commit `024e801`, blob `a9a59bd5`). **Candidate** retained; no hosted or real-weight execution is claimed. The notebook blob changes, so the two 2026-09-26 Colab T4 runs above (blobs `6623fdf1f180`, `90d0c883b7f0`) do not cover it.
+
+Local evidence, CPU only (`CUDA_VISIBLE_DEVICES=-1`), with STAND-IN matchers (the vismatch environment was not built): the notebook's own cells on the 360 pinned photos reproduce the split, both pair digests and the test baselines (identity 0.000, patch neighbour 0.333 homography accuracy @3 px, as in the hosted runs); BYOD with 4, 8, 12, 13 and 15 photos completes; after a default → BYOD → default sequence the canonical report ZIP has no `byod/` member; the BYOD run reuses the matcher environment. Not evidence of real-model behaviour, GPU memory or Colab.
+
+Still required: a fresh Colab T4 **Run all** of the new blob (default path), a BYOD run with fewer than 13 photos and one refused input (REL12), and the tolerance activity switched on.
