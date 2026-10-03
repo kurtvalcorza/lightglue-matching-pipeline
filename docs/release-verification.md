@@ -211,7 +211,7 @@ Applies to `DIMER_MultiModel_Image_Matching_Workshop.ipynb` after the review in 
 
 Local evidence, CPU only (`CUDA_VISIBLE_DEVICES=-1`), with STAND-IN matchers (the vismatch environment was not built): the notebook's own cells on the 360 pinned photos reproduce the split, both pair digests and the test baselines (identity 0.000, patch neighbour 0.333 homography accuracy @3 px, as in the hosted runs); BYOD with 4, 8, 12, 13 and 15 photos completes; after a default → BYOD → default sequence the canonical report ZIP has no `byod/` member; the BYOD run reuses the matcher environment. Not evidence of real-model behaviour, GPU memory or Colab.
 
-Still required: a fresh Colab T4 **Run all** of the new blob (default path), a BYOD run with fewer than 13 photos and one refused input (REL12), and the tolerance activity switched on.
+Still required: a BYOD run with fewer than 13 photos and one refused input (REL12), and the tolerance activity switched on. The default path is covered: this revision's blob `8f301bb6dc0d` was superseded by the 2026-10-03 layout change (below), and the resulting blob `ce64b7eb7437` passed on a fresh Colab T4 via the Colab CLI (2026-10-03 row under *Recorded executions*: 27/27 code cells, 1125.7 s).
 
 ## Supplemental multi-model image matching — 2026-10-03 source layout change
 
