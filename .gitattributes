@@ -4,3 +4,6 @@
 # Model weights cache files must retain exact upstream bytes
 weights/** -text
 examples/sample-data/** -text
+
+# Executed-notebook evidence must keep its exact bytes (SHA-256 recorded in docs/release-verification.md)
+docs/execution-evidence/** -text

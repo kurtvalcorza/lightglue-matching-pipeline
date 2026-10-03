@@ -11,7 +11,7 @@ NOTEBOOK_NAME="DIMER_MultiModel_Image_Matching_Workshop.ipynb"
 def build_notebook():
     rendered=[]
     for index,cell in enumerate(CELLS):
-        base={"id":f"dimer-matching-workshop-{index:02d}","metadata":cell.get("metadata",{}),"source":cell["source"].splitlines(keepends=True)}
+        base={"id":cell.get("id") or f"dimer-matching-workshop-{index:02d}","metadata":cell.get("metadata",{}),"source":cell["source"].splitlines(keepends=True)}
         if cell["kind"]=="markdown":
             rendered.append({"cell_type":"markdown",**base})
         else:
@@ -35,6 +35,20 @@ def build_notebook():
                 "release_status":"candidate",
                 "standalone":True,
                 "worker_required":False,
+                "review_revisions":[
+                    {
+                        "date":"2026-10-02",
+                        "review":"docs/reviews/2026-10-02-notebook-review/DIMER_MultiModel_Image_Matching_Workshop_Review.md",
+                        "reviewed_commit":"024e801760878f967359eef2120f8459fafbd46d",
+                        "findings_fixed":["MAT-M1","MAT-M2","MAT-M3","MAT-m1","MAT-m2","MAT-m3","MAT-m4","MAT-m5","MAT-m6"],
+                        "evidence":"CPU stand-in checks only; a hosted Run all of this blob is still required",
+                    },
+                    {
+                        "date":"2026-10-03",
+                        "change":"Source layout only: PHOTO_MANIFEST_B64 (32,223 characters) and MATCH_RUNNER (8,272 characters) re-serialised as parenthesised runs of string pieces of at most 1000 characters; the joined values are identical, so no cell line exceeds 2000 characters",
+                        "evidence":"ast.literal_eval of each new literal equals the old value; a hosted Run all of this blob is still required",
+                    },
+                ],
                 "generated_from":{
                     "repository":"kurtvalcorza/lightglue-matching-pipeline",
                     "source":"tools/multimodel_image_matching_workshop_source.py",

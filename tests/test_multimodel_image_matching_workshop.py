@@ -42,7 +42,12 @@ def as_python(cell):
 
 def embedded_rows():
     text = body()
-    payload = re.search(r'PHOTO_MANIFEST_B64 = "([^"]+)"', text).group(1)
+    cell = next(source for source in code_cells() if "PHOTO_MANIFEST_B64 = " in source)
+    payload = next(
+        ast.literal_eval(node.value)
+        for node in ast.parse(as_python(cell)).body
+        if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", None) == "PHOTO_MANIFEST_B64"
+    )
     digest = re.search(r'PHOTO_MANIFEST_SHA256 = "([0-9a-f]{64})"', text).group(1)
     raw = gzip.decompress(base64.b64decode(payload))
     assert hashlib.sha256(raw).hexdigest() == digest
