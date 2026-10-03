@@ -211,3 +211,7 @@ Applies to `DIMER_MultiModel_Image_Matching_Workshop.ipynb` after the review in 
 Local evidence, CPU only (`CUDA_VISIBLE_DEVICES=-1`), with STAND-IN matchers (the vismatch environment was not built): the notebook's own cells on the 360 pinned photos reproduce the split, both pair digests and the test baselines (identity 0.000, patch neighbour 0.333 homography accuracy @3 px, as in the hosted runs); BYOD with 4, 8, 12, 13 and 15 photos completes; after a default → BYOD → default sequence the canonical report ZIP has no `byod/` member; the BYOD run reuses the matcher environment. Not evidence of real-model behaviour, GPU memory or Colab.
 
 Still required: a fresh Colab T4 **Run all** of the new blob (default path), a BYOD run with fewer than 13 photos and one refused input (REL12), and the tolerance activity switched on.
+
+## Supplemental multi-model image matching — 2026-10-03 source layout change
+
+Two code-cell lines were long: `PHOTO_MANIFEST_B64` (32,223 characters) and `MATCH_RUNNER` (8,272 characters). The generator source now writes each one as a parenthesised run of string pieces of at most 1,000 characters, and the change is logged in `metadata.dimer.review_revisions`. Python joins the pieces back into the same values, and `tests/test_workshop_layout.py` checks that no cell line is longer than 2,000 characters. The notebook blob changes from `8f301bb6dc0d` (the 2026-10-02 review-fix revision, which has no hosted run) to `ce64b7eb7437`. A hosted re-run of the new blob is pending. Status stays **Candidate**.

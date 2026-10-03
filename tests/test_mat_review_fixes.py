@@ -378,7 +378,7 @@ def test_information_architecture():
 
 def test_review_revision_is_recorded_in_metadata():
     meta = json.loads(NOTEBOOK.read_text(encoding="utf-8"))["metadata"]["dimer"]
-    revision = meta["review_revisions"][-1]
+    revision = [entry for entry in meta["review_revisions"] if "review" in entry][-1]
     assert revision["date"] == "2026-10-02" and revision["review"].endswith("DIMER_MultiModel_Image_Matching_Workshop_Review.md")
     assert meta["clean_runtime_evidence"] == "pending" and meta["release_status"] == "candidate"
 

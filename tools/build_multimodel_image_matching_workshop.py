@@ -43,6 +43,11 @@ def build_notebook():
                         "findings_fixed":["MAT-M1","MAT-M2","MAT-M3","MAT-m1","MAT-m2","MAT-m3","MAT-m4","MAT-m5","MAT-m6"],
                         "evidence":"CPU stand-in checks only; a hosted Run all of this blob is still required",
                     },
+                    {
+                        "date":"2026-10-03",
+                        "change":"Source layout only: PHOTO_MANIFEST_B64 (32,223 characters) and MATCH_RUNNER (8,272 characters) re-serialised as parenthesised runs of string pieces of at most 1000 characters; the joined values are identical, so no cell line exceeds 2000 characters",
+                        "evidence":"ast.literal_eval of each new literal equals the old value; a hosted Run all of this blob is still required",
+                    },
                 ],
                 "generated_from":{
                     "repository":"kurtvalcorza/lightglue-matching-pipeline",
