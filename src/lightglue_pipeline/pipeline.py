@@ -299,15 +299,18 @@ class LightGluePipeline:
         records: Sequence[Mapping[str, Any]],
         *,
         matcher: Callable[[Image.Image, Image.Image], Mapping[str, Any]] | None = None,
+        progress: Callable[[dict[str, Any]], None] | None = None,
+        stage: str = "model",
     ) -> dict[str, Any]:
         """Homography-supervised scoring of a validated pair dataset with `metrics.matching_metrics`; `matcher`
-        substitutes a baseline for the model (same record structure, same scoring)."""
+        substitutes a baseline for the model (same record structure, same scoring). `progress`, when given, is
+        called after every pair with `{stage, done, of, seconds}` (a CPU pass over 96 pairs takes minutes)."""
         from .samples import validate_dataset
 
         checked = validate_dataset(records, min_records=1, max_records=MAX_EVAL_RECORDS)["records"]
         started = time.perf_counter()
         rows = []
-        for record in checked:
+        for done, record in enumerate(checked, start=1):
             result = (
                 matcher(record["image0"], record["image1"])
                 if matcher is not None
@@ -317,6 +320,8 @@ class LightGluePipeline:
             row = pair_metrics(result, np.asarray(record["homography"]), (int(size[0]), int(size[1])))
             row.update({"id": record["id"], "tier": record["tier"]})
             rows.append(row)
+            if progress is not None:
+                progress({"stage": stage, "done": done, "of": len(checked), "seconds": round(time.perf_counter() - started, 1)})
         out = matching_metrics(rows)
         tiers = sorted({r["tier"] for r in rows})
         out["by_tier"] = {
@@ -340,16 +345,22 @@ class LightGluePipeline:
         )
         return out
 
-    def evaluate_baselines(self, records: Sequence[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    def evaluate_baselines(
+        self,
+        records: Sequence[Mapping[str, Any]],
+        *,
+        progress: Callable[[dict[str, Any]], None] | None = None,
+    ) -> dict[str, dict[str, Any]]:
         """The three references scored exactly as the model is: two non-neural (identity guess, patch nearest
-        neighbour) and the same keypoints without the learned matcher (descriptor mutual nearest neighbour)."""
+        neighbour) and the same keypoints without the learned matcher (descriptor mutual nearest neighbour).
+        `progress` is passed to `evaluate` with the baseline's name as the stage."""
         out = {}
         for name, fn in (
             ("identity", identity_baseline),
             ("patch_neighbour", patch_neighbour_baseline),
             ("descriptor_nn", self.descriptor_nn_match),
         ):
-            result = self.evaluate(records, matcher=fn)
+            result = self.evaluate(records, matcher=fn, progress=progress, stage=name)
             result["baseline"] = name
             out[name] = result
         return out
@@ -445,6 +456,7 @@ class LightGluePipeline:
         trainable_layers: int = DEFAULT_TRAINABLE_LAYERS,
         seed: int = 0,
         progress: Callable[[dict[str, Any]], None] | None = None,
+        stage_progress: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         """Bounded fine-tuning of the matcher on validated pairs.
 
@@ -457,9 +469,21 @@ class LightGluePipeline:
         accumulated per AdamW step (pairs have different keypoint counts, so they are not stacked), gradients
         are clipped at 1.0, the order is seeded, no scheduler. Epoch 0 records the frozen model's validation
         metrics; the epoch with the highest validation precision at 3 px is kept (ties broken by homography
-        accuracy at 3 px). Transactional: any failure restores the base tensors."""
+        accuracy at 3 px). Transactional: any failure restores the base tensors.
+
+        Training always starts from the pinned base: a pipeline that already holds an adapted matcher (an earlier
+        `adapt` or `load_artifact`) is refused, so epoch 0 is the frozen model and the artifact's history describes
+        one training run from the base (`started_from`). `stage_progress`, when given, is called during the
+        feature caching and the per-epoch validation scoring with `{stage, done, of, seconds}`."""
         from .samples import validate_dataset
 
+        if self.adapter is not None:
+            raise ValueError(
+                "this pipeline already holds an adapted matcher (best epoch "
+                f"{self.adapter.get('best_epoch')} of an earlier run); adapt() trains from the pinned base only, so its "
+                "epoch 0 is the frozen model. Reload the base with LightGluePipeline.from_pretrained(weights_dir=...) "
+                "(the tutorial's reset_to_pretrained()) and call adapt() on that"
+            )
         if isinstance(epochs, bool) or not isinstance(epochs, int) or not 1 <= epochs <= 20:
             raise ValueError("epochs must be an int in 1..20")
         if not (0.0 < lr <= 1e-3):
@@ -479,10 +503,12 @@ class LightGluePipeline:
         n_trainable = sum(p.numel() for p in params)
         optimiser = torch.optim.AdamW(params, lr=lr, weight_decay=0.01)
         cached = []
-        for record in train_checked:
+        for done, record in enumerate(train_checked, start=1):
             feats0, feats1 = self._features(record["image0"]), self._features(record["image1"])
             gt = self.match_ground_truth(feats0["keypoints"][0].cpu().numpy(), feats1["keypoints"][0].cpu().numpy(), np.asarray(record["homography"]))
             cached.append((feats0, feats1, gt))
+            if stage_progress is not None:
+                stage_progress({"stage": "training features", "done": done, "of": len(train_checked), "seconds": round(time.perf_counter() - started, 1)})
         n_positive = int(sum(len(gt["positives"]) for _f0, _f1, gt in cached))
         feature_seconds = round(time.perf_counter() - started, 2)
 
@@ -490,7 +516,7 @@ class LightGluePipeline:
             if not val_checked:
                 return None
             model.eval()
-            result = self.evaluate(val_checked)
+            result = self.evaluate(val_checked, progress=stage_progress, stage="validation")
             return {k: result[k] for k in ("precision_3px", "homography_acc_3px", "inliers_per_pair", "matches_per_pair", "n")}
 
         def key(entry: dict[str, Any]) -> tuple[float, float]:
@@ -566,6 +592,7 @@ class LightGluePipeline:
             "ground_truth": {"positive_px": POSITIVE_PX, "negative_px": NEGATIVE_PX, "positive_pairs": n_positive},
             "feature_seconds": feature_seconds,
             "seed": seed,
+            "started_from": "pinned base (no earlier adaptation)",
             "history": history,
             "seconds": round(time.perf_counter() - started, 2),
         }

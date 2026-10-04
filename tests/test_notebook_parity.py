@@ -1,4 +1,4 @@
-"""NOTEBOOK_SPEC 2.0 parity tests (PAR1–PAR3) for the standalone tutorial notebook.
+"""NOTEBOOK_SPEC 2.2 parity tests (PAR1–PAR3) for the standalone tutorial notebook.
 
 The notebook carries `src/<package>/pipeline.py` verbatim; these tests fail whenever the carried
 cell, the inline manifest, or the inline pins diverge from the repository at HEAD.
@@ -66,7 +66,11 @@ def test_par1_embedded_modules_equal_repository_modules(notebook: dict) -> None:
         drifted = (
             f"embedded module cell for {rel} drifted from the package; regenerate the notebook"
         )
-        assert _source(cell).rstrip("\n") + "\n" == ctx["embedded"][module], drifted
+        # LGC-m6: the carried cell is the module plus the generator's one Infrastructure title line, collapsed.
+        assert _source(cell).startswith(build.CARRIED_TITLE_PREFIX)
+        assert cell["metadata"].get("cellView") == "form"
+        stripped = build.strip_carried_title(_source(cell))
+        assert stripped.rstrip("\n") + "\n" == ctx["embedded"][module], drifted
 
 
 REWRITES = TEMPLATE.get(

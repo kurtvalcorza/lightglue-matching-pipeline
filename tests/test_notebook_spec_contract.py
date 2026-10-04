@@ -35,8 +35,8 @@ def test_release_notebook_declares_e2e_profile() -> None:
     notebook = _load_notebook()
     dimer = notebook["metadata"]["dimer"]
     assert dimer["notebook_profile"] == "E2E"
-    assert dimer["notebook_spec"] == "2.0"
-    assert dimer["standalone"] is True  # NOTEBOOK_SPEC 2.0 §4; parity in test_notebook_parity.py
+    assert dimer["notebook_spec"] == "2.2"
+    assert dimer["standalone"] is True  # NOTEBOOK_SPEC 2.2 §4; parity in test_notebook_parity.py
 
     registry = REGISTRY.read_text(encoding="utf-8")
     assert "lightglue_matching_colab.ipynb" in registry
@@ -66,8 +66,9 @@ def test_release_notebook_has_gated_byod_path() -> None:
     source = _source_text(_load_notebook())
     assert "USE_BYOD = False" in source
     assert "files.upload()" in source
-    assert "records = load_byod_dataset(byod_zip)" in source
-    assert "splits = split_dataset(records, seed=SPLIT_SEED)" in source
+    assert "BYOD_PATH = ''" in source
+    assert "records = load_byod_dataset(byod_source)" in source
+    assert "splits = split_dataset(unique_records, seed=SPLIT_SEED)" in source
 
 
 def test_release_notebook_exercises_the_adaptation_contract() -> None:
@@ -76,13 +77,13 @@ def test_release_notebook_exercises_the_adaptation_contract() -> None:
         "corpus_files = fetch_corpus(cache_dir='weights/inat-birds')",
         "splits = build_sample_dataset(corpus, seed=SPLIT_SEED)",
         "disjoint = check_split_disjoint(splits)",
-        "baselines = pipe.evaluate_baselines(test_records)",
-        "frozen_test = pipe.evaluate(test_records)",
+        "baselines = pipe.evaluate_baselines(test_records, progress=show_progress)",
+        "frozen_test = pipe.evaluate(test_records, progress=show_progress, stage='frozen model')",
         "adapt_result = pipe.adapt(train_records, val_records, epochs=EPOCHS, lr=LEARNING_RATE,",
-        "assert adapted_test['precision_3px'] >= frozen_test['precision_3px'] - 0.01",
+        "'adapted_beats_frozen': delta['precision_3px'] > 0,",
         "pipe.save_artifact(artifact_dir,",
         "reloaded = LightGluePipeline.from_artifact(artifact_dir, weights_dir=WEIGHTS_DIR, device=pipe.device)",  # noqa: E501
-        "assert parity['identical_pairs'] == parity['of']",
+        "raise RuntimeError(f'Reload parity failed: {parity}.",
     ):
         assert marker in source
 
