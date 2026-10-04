@@ -104,7 +104,8 @@ def test_original_cell_ids_are_stable_and_new_cells_are_named():
     assert "dimer-matching-workshop-58" not in ids
     assert ids[-1] == "dimer-matching-workshop-52"  # the one troubleshooting table closes the notebook
     assert {i for i in ids if not i.startswith("dimer-matching-workshop-")} == {
-        "mat-notice-09", "mat-notice-12", "mat-notice-14", "mat-notice-15", "mat-notice-16", "mat-notice-18", "mat-activity", "mat-activity-answer"}
+        "mat-notice-09", "mat-notice-12", "mat-notice-14", "mat-notice-15", "mat-notice-16", "mat-notice-18", "mat-activity", "mat-activity-answer",
+        "mat-uv-lock"}  # 2026-10-04: generated carrier of the matcher environment's hash lock
     assert len(ids) == len(set(ids))
 
 
