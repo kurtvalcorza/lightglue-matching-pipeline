@@ -1,0 +1,5 @@
+# Isolated environment of DIMER_MultiModel_Image_Matching_Workshop.ipynb (2026-10-04).
+# Exact pins carried over from the notebook's former install (section 10, PINS):
+vismatch==1.3.2
+torch==2.14.0
+torchvision==0.29.0
