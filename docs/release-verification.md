@@ -21,8 +21,9 @@ CI runs `tools/validate_release_assets.py`, which checks:
   rewrites (the `DEFAULT_WEIGHTS_DIR` rule, the `resolve_weights_path` checkout-convenience line, and the removal of
   package-relative imports); the inline `MANIFEST` equal to the committed 2-entry snapshot manifest (each source with
   its conversion) and the inline `PINS` equal to the `pyproject.toml` runtime pins; the notebook byte-identical (on
-  LF) to `tools/build_notebook.py` output for its recorded revision; the pinned-install cell with its
-  restart-on-stale-import guard; `NOTEBOOK_SOURCE` recorded in exports;
+  LF) to `tools/build_notebook.py` output for its recorded revision; exactly one kernel cell, which builds (or
+  reuses) the hash-locked isolated environment from `tutorials/requirements-colab.lock.txt` and routes every later cell
+  to it (no in-kernel install, no restart); `NOTEBOOK_SOURCE` recorded in exports;
 - `MODEL_ID`/`MODEL_REVISION` bound only in the carried module cells (and repeated in the inline manifest, which the
   notebook asserts against the module before fetching), the revision an immutable GitHub release tag, the ALIKED
   commit and the vendored LightGlue commit the only 40-hex revisions a document may cite, and the same identity string
