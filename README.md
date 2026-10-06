@@ -71,7 +71,7 @@ The default path runs on CPU and uses CUDA automatically when present (about 61 
 
 ## Release status
 
-**Candidate** — the notebook was regenerated on 2026-10-05 for the review fixes (PR #11) and its new blob has no hosted run yet. The previous blob `d5e562ea` (`22f03c5`) ran in a Kaggle Tesla T4 runtime on 2026-09-21 but completed only in two passes (an executor restart after the install cell), so it is not promotion evidence; the record is in `docs/release-verification.md` and `STATUS.md`. Static and unit checks — including the standalone generator parity checks — are necessary but were never the evidence; the hosted run is. A later change to the carried modules or the notebook returns the status to Candidate until re-verified.
+**Candidate** — the notebook was regenerated on 2026-10-05 for the review fixes (PR #11), and its new blob ran the default path in one pass on a fresh Colab Tesla T4 on 2026-10-06 (Colab CLI sequential execution, 18/18 code cells, no restart, 0 errors); promotion awaits a reviewer's decision. The previous blob `d5e562ea` (`22f03c5`) ran in a Kaggle Tesla T4 runtime on 2026-09-21 but completed only in two passes (an executor restart after the install cell), so it is not promotion evidence; the record is in `docs/release-verification.md` and `STATUS.md`. Static and unit checks — including the standalone generator parity checks — are necessary but were never the evidence; the hosted run is. A later change to the carried modules or the notebook returns the status to Candidate until re-verified.
 
 ## Weights layout
 
