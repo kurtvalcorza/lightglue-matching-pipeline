@@ -147,10 +147,10 @@ def test_validate_dataset_reports_and_rejects(tmp_path):
 
 
 def test_split_dataset_dedups_and_byod_round_trip(tmp_path):
-    images = [{"id": f"img{i}", "image": textured_image(i, (400, 300))} for i in range(10)]
+    images = [{"id": f"img{i}", "image": textured_image(i, (400, 300))} for i in range(12)]
     images.append({"id": "dup", "image": images[0]["image"].copy()})
     splits = split_dataset(images, val_fraction=0.2, test_fraction=0.2, seed=0)
-    assert sum(len(v) for v in splits.values()) == 10  # the duplicate image is dropped
+    assert sum(len(v) for v in splits.values()) == 12  # the duplicate image is dropped
     assert check_split_disjoint(splits) and all(r["tier"] in TIERS for r in splits["train"])
     for image in images[:4]:
         image["image"].save(tmp_path / f"{image['id']}.png")

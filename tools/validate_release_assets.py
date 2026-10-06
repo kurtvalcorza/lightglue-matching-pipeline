@@ -1,6 +1,6 @@
 """Static release-asset validation for the LightGlue + ALIKED matching (E2E) DIMER pipeline.
 
-Checks the STANDALONE tutorial notebook (DIMER Notebook Specification 2.0 §4), the tutorial
+Checks the STANDALONE tutorial notebook (DIMER Notebook Specification 2.2 §4), the tutorial
 registry, model card, README, STATUS.md and weight documentation for source conformance and
 cross-document identity consistency, and runs the generator parity checks (PAR1–PAR3).
 
@@ -33,7 +33,7 @@ MODEL_LOAD_EXPR = f"{PIPELINE_CLASS}.from_pretrained(weights_dir=WEIGHTS_DIR)"
 # Additional 40-hex revisions a document may legitimately cite (none by default).
 KNOWN_SHAS: frozenset[str] = frozenset(("eb42fee2d71449efb0aa5c10549752b5d75384d8", "683d7c65197395c0b3f01ebe76e1084a27e73a65"))  # the vendored LightGlue commit and the pinned ALIKED commit
 # Colab form gates that must default to the non-interactive sample path.
-BYOD_GATES = ("USE_BYOD",)
+BYOD_GATES = ("USE_BYOD", "RUN_EXPERIMENT")  # LGC-m6: the Section 10 experiment is off by default
 # Machine-readable artifacts the notebook must write (OUT1-OUT3, OUT8, DAT24, EVAL21).
 EXPECTED_OUTPUTS = (
     "outputs/lightglue_matching_train.csv",
@@ -49,9 +49,16 @@ CODE_MARKERS = (
     "corpus_files = fetch_corpus(cache_dir='weights/inat-birds')",
     "corpus = read_corpus(corpus_files)",
     "splits = build_sample_dataset(corpus, seed=SPLIT_SEED)",
-    "records = load_byod_dataset(byod_zip)",
-    "splits = split_dataset(records, seed=SPLIT_SEED)",
-    "dataset_manifests = {name: validate_dataset(part) for name, part in splits.items()}",
+    # LGC-m1: BYOD path field, upload guard, duplicates and upscaling reported, per-split minimums printed
+    "records = load_byod_dataset(byod_source)",
+    "BYOD_PATH = ''",
+    "if len(uploaded) != 1:",
+    "unique_records, dropped_duplicates = distinct_images(records)",
+    "upscaling = upscaling_report(unique_records)",
+    "splits = split_dataset(unique_records, seed=SPLIT_SEED)",
+    "minimums = split_minimums()",
+    "dataset_manifests = {name: validate_dataset(part, min_records=minimums[name]) for name, part in splits.items()}",
+    "print({'byod_minimum_distinct_photographs': byod_record_limits()[0], 'split_minimums': minimums})",
     "disjoint = check_split_disjoint(splits)",
     "'observer_overlap': observer_overlap(splits)",
     "write_dataset_csv(train_records, 'outputs/lightglue_matching_train.csv')",
@@ -67,23 +74,37 @@ CODE_MARKERS = (
     "scene_match = pipe.match(scene_path, scene1_path)",
     "scene_errors = reprojection_errors(scene_match['kpts0'], scene_match['kpts1'], SHAPES_H)",
     "frozen_scene = evaluation_report(scene_match, {'homography': SHAPES_H, 'size': scene_match['size0']}, sample_kind='synthetic')",
-    "baselines = pipe.evaluate_baselines(test_records)",
-    "frozen_test = pipe.evaluate(test_records)",
-    "assert frozen_test['precision_3px'] > baselines['patch_neighbour']['precision_3px'] and frozen_test['homography_acc_3px'] > baselines['identity']['homography_acc_3px']",
-    "adapt_result = pipe.adapt(train_records, val_records, epochs=EPOCHS, lr=LEARNING_RATE, batch_size=BATCH_SIZE, trainable_layers=TRAINABLE_LAYERS, progress=report)",
-    "adapted_test = pipe.evaluate(test_records)",
-    "adapted_val = pipe.evaluate(val_records)",
-    "assert adapted_test['precision_3px'] >= frozen_test['precision_3px'] - 0.01",
+    # LGC-m7: the multi-minute stages print progress
+    "def show_progress(event):",
+    "baselines = pipe.evaluate_baselines(test_records, progress=show_progress)",
+    "frozen_test = pipe.evaluate(test_records, progress=show_progress, stage='frozen model')",
+    # LGC-M2 / LGC-M3: Sections 5-7 start from the pinned base; Section 6 refuses an adapted matcher
+    "def reset_to_pretrained():",
+    "    pipe = LightGluePipeline.from_pretrained(weights_dir=WEIGHTS_DIR)",
+    "if frozen_test['adapted']:",
+    # LGC-m5: comparisons are recorded, not asserted
+    "frozen_beats = {name: frozen_test['precision_3px'] > result['precision_3px'] for name, result in baselines.items()}",
+    "adapt_result = pipe.adapt(train_records, val_records, epochs=EPOCHS, lr=LEARNING_RATE, batch_size=BATCH_SIZE, trainable_layers=TRAINABLE_LAYERS, progress=report, stage_progress=show_progress)",
+    "adapted_test = pipe.evaluate(test_records, progress=show_progress, stage='adapted model')",
+    "adapted_val = pipe.evaluate(val_records, progress=show_progress, stage='adapted model, validation')",
+    "'adapted_beats_frozen': delta['precision_3px'] > 0,",
+    "print('Reading: ' + reading)",
+    "run_history = globals().get('run_history', [])",
+    "'outcomes': outcomes,",
+    # LGC-m6: correspondence figure and the off-by-default experiment on a fresh base
+    "figure.save('outputs/lightglue_matching_correspondences.png')",
+    "experiment_pipe = LightGluePipeline.from_pretrained(weights_dir=WEIGHTS_DIR)",
+    "'starts_from_base': experiment_epoch0 == default_epoch0,",
     "adapted_scene_match = pipe.match(scene_path, scene1_path)",
     "adapted_scene = evaluation_report(adapted_scene_match, {'homography': SHAPES_H, 'size': adapted_scene_match['size0']}, sample_kind='synthetic')",
     "pipe.save_artifact(artifact_dir, metadata={'tutorial': 'lightglue_matching', 'data_source': data_source})",
     "reloaded = LightGluePipeline.from_artifact(artifact_dir, weights_dir=WEIGHTS_DIR, device=pipe.device)",
-    "assert parity['identical_pairs'] == parity['of']",
+    "raise RuntimeError(f'Reload parity failed: {parity}.",
     "write_provenance('outputs/provenance.json', pipeline=pipe)",
     "'model_revision': MODEL_REVISION",
     "'model_license': MODEL_LICENSE",
     "'weight_file': MODEL_FILENAME, 'weight_format': 'safetensors, converted once from the audited source pickle, digest-verified', 'weight_sha256': MODEL_SHA256, 'extractor_file': EXTRACTOR_FILENAME, 'extractor_sha256': EXTRACTOR_SHA256, 'vendored_code': {'lightglue': {'repository': UPSTREAM_REPOSITORY, 'commit': UPSTREAM_COMMIT}, 'aliked': {'repository': ALIKED_REPOSITORY, 'commit': EXTRACTOR_COMMIT}}",
-    "'corpus': {'name': CORPUS_NAME, 'release': CORPUS_RELEASE, 'license': CORPUS_LICENSE, 'base_url': CORPUS_BASE_URL, 'bytes': CORPUS_BYTES, 'pinned_photographs': len(SAMPLE_RECORDS), 'tiers': TIER_PARAMS",
+    "'corpus': None if USE_BYOD else {'name': CORPUS_NAME, 'release': CORPUS_RELEASE, 'license': CORPUS_LICENSE, 'base_url': CORPUS_BASE_URL, 'bytes': CORPUS_BYTES, 'pinned_photographs': len(SAMPLE_RECORDS), 'tiers': TIER_PARAMS",
     "'device': str(pipe.device)",
 )
 # Profile-specific learner-facing statements.
@@ -113,6 +134,51 @@ MARKDOWN_MARKERS = (
     "## 9. Re-match the drawn pair, export the adapter and reload it",
     "**Leakage:**",
     "**References:**",
+    # LGC-m3: the run-to-run spread with both records' environments, and the direction difference stated
+    "**Run-to-run spread.**",
+    "**0.765 on the build workstation's CPU**",
+    "**0.768 on the recorded Kaggle Tesla T4 run**",
+    "0.708 → 0.698 (down) on the CPU and 0.708 → 0.719 (up) on the T4",
+    # LGC-m4: the notebook builds its own Python 3.12.12 environment whatever the kernel runs
+    "Section 1 builds its own **Python 3.12.12** environment",
+    # LGC-m1: the stated BYOD minimum (computed by byod_record_limits; a test ties the two together)
+    "**at least 12 distinct photographs**",
+    "**upscaled**",
+    # LGC-M2 / LGC-M3
+    "**Every pass starts from the pinned base.**",
+)
+# Learner-facing text the review fixes removed; it must not come back (LGC-M1 restart/install text, LGC-m1 the wrong
+# BYOD minimum, LGC-m2 the identity/access defects, LGC-m3 the CPU record stated as this run's result, LGC-m5 the assert).
+STALE_MARKDOWN = (
+    "its restart",
+    "Restart the runtime, then rerun",
+    "installs the pinned dependencies",
+    "at least eight",
+    "re-run from that cell",
+    "No GitHub access",
+    "v0.1_arxiv…",
+    "(`Shiaoming/ALIKED`, the extractor) at the immutable release tag",
+    "The cell asserts",
+    "the build record measured 0.750 → 0.765",
+    "Python 3.12).",
+    "NOTEBOOK_SPEC 2.0",
+)
+# The guided layer (NOTEBOOK_SPEC 2.2 §3.5, GDL1-GDL15; review LGC-m6): each marker with its minimum count.
+GUIDED_MARKERS = (
+    ("**Who this is for.**", 1),
+    ("**Input → Model → Output.**", 1),
+    ("**How to use this notebook.**", 1),
+    ("**Roadmap:**", 1),
+    ("**Predict before running:**", 7),
+    ("**What to notice:**", 7),
+    ("<summary>Check your reasoning</summary>", 7),
+    ("## 10. Your turn — change one thing", 1),
+    ("**Predict → Change one thing → Run → Observe → Explain**", 1),
+    ("## Troubleshooting", 1),
+    ("## Glossary", 1),
+    ("## Conclusion (your notes)", 1),
+    ("> **Infrastructure.**", 3),
+    ("**Optional experiments", 1),
 )
 # Direct-library use that must stay inside the carried module cells (G2: the notebook calls the
 # pipeline API, it does not reimplement it). Checked on every code cell except the embedded ones
@@ -144,10 +210,10 @@ INSTALL_CELL_MARKER = "subprocess.run([sys.executable, '-m', 'pip', 'install', '
 # ---------------------------------------------------------------------------
 # Shared checks. Everything below is source/structure validation only. Passing
 # these checks is NOT clean-runtime execution evidence under DIMER Notebook
-# Specification 2.0; see docs/release-verification.md for the release gate.
+# Specification 2.2; see docs/release-verification.md for the release gate.
 # ---------------------------------------------------------------------------
 
-NOTEBOOK_SPEC = "2.0"
+NOTEBOOK_SPEC = "2.2"
 ALLOWED_PROFILES = {"E2E", "ARTIFACT-INFERENCE", "TASK-INFERENCE", "MULTI-CAPABILITY", "SMOKE"}
 STATUS_TOKENS = ("Candidate", "Release-grade")
 PLACEHOLDER = re.compile(r"\b(TODO|TBD|FIXME)\b|Insert text here|Tooltip:", re.I)
@@ -211,7 +277,7 @@ COMMON_MARKDOWN_MARKERS = (
     "**Learning objectives:**",
     "## Prerequisites",
     "Do not upload confidential or restricted",
-    "- **External access:** the LightGlue GitHub release (`cvg/LightGlue`, the matcher) and the ALIKED repository at a pinned commit (`Shiaoming/ALIKED`, the extractor) only",
+    "- **External access:** GitHub only, for the two checkpoint files",
     "## 1. Install the pinned runtime",
     "## 2. Pipeline code (carried verbatim from",
     "## 3. Pin, stage and verify the model",
@@ -622,8 +688,13 @@ def _validate_embedded_modules(path: Path, notebook: dict, build) -> list[int]:
             cell["metadata"]["dimer"].get("module_sha256") == context["per_module_sha256"][rel],
             f"{path.name}: cell {index} module_sha256 tag does not match {rel}",
         )
+        # LGC-m6: the carried cell is the module plus the generator's one Infrastructure title line, collapsed.
         _check(
-            _cell_source(cell).rstrip("\n") + "\n" == context["embedded"][module],
+            _cell_source(cell).startswith(build.CARRIED_TITLE_PREFIX) and cell.get("metadata", {}).get("cellView") == "form",
+            f"{path.name}: carried module cell {index} must start with the generator's Infrastructure title and be collapsed (cellView: form)",
+        )
+        _check(
+            build.strip_carried_title(_cell_source(cell)).rstrip("\n") + "\n" == context["embedded"][module],
             f"{path.name}: embedded module cell {index} differs from {rel} (PAR1); regenerate the notebook",
         )
     return [index for index, _ in tagged]
@@ -680,7 +751,7 @@ def _validate_bootstrap_guard(path: Path, code_cells: list[tuple[int, str, ast.M
 
 
 def _validate_notebook_content(
-    path: Path, code_cells: list[tuple[int, str, ast.Module]], markdown: str, embedded: list[int]
+    path: Path, code_cells: list[tuple[int, str, ast.Module]], markdown: str, embedded: list[int], notebook: dict
 ) -> None:
     model_id, _revision = _package_identity()
     stripped = {index: _strip_comments(source) for index, source, _ in code_cells}
@@ -690,11 +761,33 @@ def _validate_notebook_content(
     _check(not missing, f"{path.name}: missing required source markers: {missing}")
     present = [label for label, pattern in FORBIDDEN_PATTERNS if pattern.search(code)]
     _check(not present, f"{path.name}: forbidden/insecure source: {present}")
-    outside_stage_cells = "\n".join(
-        text for index, text in stripped.items() if index not in embedded and INSTALL_CELL_MARKER not in text
+    # LGC-M1: the kernel install cell downloads the pinned uv wheel and verifies its size and SHA-256; with the
+    # generator's runtime-record cell (pip install guard, skipped in the isolated worker) it is the only cell outside
+    # the carried modules allowed to use urllib.request / the pinned-install markers.
+    kernel = {index for index, source, _tree in code_cells if "# dimer: kernel cell" in source}
+    learner = "\n".join(
+        text for index, text in stripped.items() if index not in embedded and index not in kernel and INSTALL_CELL_MARKER not in text
     )
-    leaked = [marker for marker in FORBIDDEN_OUTSIDE_MODULE if marker in outside_stage_cells]
+    kernel_raw = [source for index, source, _tree in code_cells if index in kernel]
+    leaked = [marker for marker in FORBIDDEN_OUTSIDE_MODULE if marker in learner]
+    leaked += [m for m in FORBIDDEN_OUTSIDE_MODULE if m not in ("urllib.request", "subprocess.run([") and any(m in _strip_comments(k) for k in kernel_raw)]
     _check(not leaked, f"{path.name}: direct library use outside the carried module cell (G2): {leaked}")
+    _check(len(kernel) == 2, f"{path.name}: exactly two kernel cells (isolated install and router) are expected (LGC-M1)")
+    install = next((k for k in kernel_raw if "LOCK_TEXT = r" in k), "")
+    for needed in ('"--managed-python"', '"--require-hashes"', '"--only-binary"', '":all:"', "UV_SHA256", "LOCK_SHA256", 'platform.machine() != "x86_64"'):
+        _check(needed in install, f"{path.name}: the isolated install cell must use {needed} (LGC-M1)")
+    _check("_ip.input_transformers_cleanup.append(_route_to_isolated_runtime)" in "\n".join(kernel_raw), f"{path.name}: later cells must be routed to the isolated environment (LGC-M1)")
+    _check("module.__spec__ = importlib.machinery.ModuleSpec(name, None, is_package=package)" in "\n".join(kernel_raw), f"{path.name}: the worker's google.colab stubs must carry a module spec")
+    stale = [marker for marker in STALE_MARKDOWN if marker in markdown]
+    _check(not stale, f"{path.name}: stale learner-facing text: {stale}")
+    _check("{{" not in markdown and "}}" not in markdown, f"{path.name}: markdown must not show doubled braces")
+    _check("\nassert " not in "\n" + learner, f"{path.name}: learner cells must not use a bare assert (LGC-m5)")
+    short = [(marker, markdown.count(marker), least) for marker, least in GUIDED_MARKERS if markdown.count(marker) < max(least, 1)]
+    _check(not short, f"{path.name}: guided layer incomplete (marker, found, needed): {short}")
+    # GDL11 (LGC-m6): every setup cell (install, router, runtime record, carried modules, model) is collapsed and titled.
+    setup = [cell for cell in notebook["cells"] if cell["cell_type"] == "code"][: 3 + len(embedded) + 1]
+    _check(all(cell.get("metadata", {}).get("cellView") == "form" for cell in setup), f"{path.name}: Sections 1-3 code cells must be collapsed (cellView: form) (LGC-m6)")
+    _check(all("".join(cell["source"]).startswith("# @title Infrastructure: ") for cell in setup), f"{path.name}: Sections 1-3 code cells must be titled '# @title Infrastructure: ...' (LGC-m6)")
     _check(
         f"pipe = {MODEL_LOAD_EXPR}" in outside,
         f"{path.name}: must load through {MODEL_LOAD_EXPR} (INF1)",
@@ -729,7 +822,7 @@ def validate_notebooks() -> None:
     _model_id, revision = _package_identity()
     _validate_identity(path, code_cells, embedded, revision)
     _validate_parity(path, notebook, code_cells, build)
-    _validate_notebook_content(path, code_cells, markdown, embedded)
+    _validate_notebook_content(path, code_cells, markdown, embedded, notebook)
     registry = _read(tutorials / "README.md")
     _check(f"`{path.name}`" in registry, f"{path.name} missing from tutorials/README.md")
     _check(

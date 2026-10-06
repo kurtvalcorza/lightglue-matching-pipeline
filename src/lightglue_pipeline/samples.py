@@ -3838,7 +3838,7 @@ def make_pairs(records: Sequence[Mapping[str, Any]], *, seed: int = SAMPLE_SEED,
     for index, record in enumerate(records):
         chosen = tier or TIERS[index % len(TIERS)]
         pair = make_pair(record["image"], seed=seed * 100_003 + index, tier=chosen, record_id=str(record["id"]))
-        for key in ("species", "observer", "inat_photo_id", "inat_observation_url", "source_id"):
+        for key in ("species", "observer", "inat_photo_id", "inat_observation_url", "source_id", "original_size"):
             if key in record:
                 pair[key] = record[key]
         out.append(pair)
@@ -3944,7 +3944,7 @@ def _check_record(record: Any, index: int) -> dict[str, Any]:
     if not isinstance(tier, str) or not tier:
         raise ValueError(f"{label_name}: tier must be a non-empty string when given")
     item = {"id": rid, "image0": image0, "image1": image1, "homography": homography.tolist(), "tier": tier}
-    for key in ("source_id", "seed", "species", "observer", "inat_photo_id", "inat_observation_url"):
+    for key in ("source_id", "seed", "species", "observer", "inat_photo_id", "inat_observation_url", "original_size"):
         if key in record:
             item[key] = record[key]
     return item
@@ -4023,32 +4023,123 @@ def observer_overlap(splits: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[
     }
 
 
-def split_dataset(
-    records: Sequence[Mapping[str, Any]],
-    *,
-    val_fraction: float = 0.15,
-    test_fraction: float = 0.2,
-    seed: int = 0,
-) -> dict[str, list[dict[str, Any]]]:
-    """Seeded shuffle of BYOD image records (`{id, image}`) into train / validation / test after de-duplicating
-    images by decoded pixels, then one pair per image."""
-    if not (0.0 <= val_fraction < 1.0 and 0.0 < test_fraction < 1.0 and val_fraction + test_fraction < 1.0):
-        raise ValueError("fractions must satisfy 0 <= val < 1, 0 < test < 1, val + test < 1")
+DEFAULT_VAL_FRACTION = 0.15
+DEFAULT_TEST_FRACTION = 0.2
+
+
+def split_minimums() -> dict[str, int]:
+    """Pairs each split must hold for the tutorial to run end to end: `validate_dataset`'s `MIN_RECORDS` for the
+    training split and for each scored split (validation picks the epoch, test is read once)."""
+    return {"train": MIN_RECORDS, "validation": MIN_RECORDS, "test": MIN_RECORDS}
+
+
+def _split_sizes(n: int, val_fraction: float, test_fraction: float) -> dict[str, int]:
+    """Photographs per split for `n` distinct photographs: the fractions, but never fewer than the split minimum
+    for validation (when it is used) and test; the training split takes the rest."""
+    minimums = split_minimums()
+    n_test = max(minimums["test"], round(n * test_fraction))
+    n_val = max(minimums["validation"], round(n * val_fraction)) if val_fraction > 0 else 0
+    return {"train": n - n_test - n_val, "validation": n_val, "test": n_test}
+
+
+def byod_record_limits(
+    val_fraction: float = DEFAULT_VAL_FRACTION, test_fraction: float = DEFAULT_TEST_FRACTION
+) -> tuple[int, int]:
+    """(smallest, largest) number of distinct BYOD photographs `split_dataset` accepts at these fractions: every
+    split at least its minimum, the training split at most `MAX_RECORDS` and each scored split at most
+    `MAX_RECORDS` too. 12 and 7,693 at the default fractions."""
+    minimums = split_minimums()
+    n = 1
+    while _split_sizes(n, val_fraction, test_fraction)["train"] < minimums["train"]:
+        n += 1
+    low = n
+    high = low
+    while all(v <= MAX_RECORDS for v in _split_sizes(high + 1, val_fraction, test_fraction).values()):
+        high += 1
+    return low, high
+
+
+def distinct_images(records: Sequence[Mapping[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
+    """The records whose decoded pixels are new, in order, and the ids of the pixel-for-pixel duplicates dropped
+    (each photograph may become only one pair, in only one split)."""
     seen: set[str] = set()
-    unique = []
+    unique: list[dict[str, Any]] = []
+    dropped: list[str] = []
     for record in records:
         image = _open(record["image"], str(record.get("id")))
         key = image_digest(image)
-        if key not in seen:
-            seen.add(key)
-            unique.append({**record, "image": image})
+        if key in seen:
+            dropped.append(str(record.get("id")))
+            continue
+        seen.add(key)
+        unique.append({**record, "image": image})
+    return unique, dropped
+
+
+def upscaling_report(records: Sequence[Mapping[str, Any]], long_side: int = WORKING_LONG_SIDE) -> dict[str, Any]:
+    """Which BYOD photographs `prepare_image` enlarged to the working size (long side `long_side`): pairs are built at
+    640 px whatever the upload, so a small photograph is upscaled, and one under `MIN_SIDE` px on a side is upscaled
+    many times over. Reported, not refused: the learner decides whether those pairs measure the matcher or the
+    interpolation. Records without `original_size` (the pinned sample) are skipped."""
+    upscaled: list[dict[str, Any]] = []
+    for record in records:
+        size = record.get("original_size")
+        if not size:
+            continue
+        width, height = int(size[0]), int(size[1])
+        if max(width, height) < long_side:
+            upscaled.append(
+                {
+                    "id": str(record.get("source_id", record.get("id"))),
+                    "original_size": [width, height],
+                    "factor": round(long_side / max(width, height), 1),
+                    "under_min_side": min(width, height) < MIN_SIDE,
+                }
+            )
+    return {
+        "working_long_side": long_side,
+        "upscaled": len(upscaled),
+        "under_min_side": [u["id"] for u in upscaled if u["under_min_side"]],
+        "largest_factor": max((u["factor"] for u in upscaled), default=None),
+        "details": upscaled[:20],
+    }
+
+
+def split_dataset(
+    records: Sequence[Mapping[str, Any]],
+    *,
+    val_fraction: float = DEFAULT_VAL_FRACTION,
+    test_fraction: float = DEFAULT_TEST_FRACTION,
+    seed: int = 0,
+) -> dict[str, list[dict[str, Any]]]:
+    """Seeded shuffle of BYOD image records (`{id, image}`) into train / validation / test after de-duplicating
+    images by decoded pixels, then one pair per image. Every split gets at least its `split_minimums()` count
+    (validation and test take more than their fraction on small sets); a set too small or too large for that is
+    refused before any pair is built, with a message naming the split and the photograph count needed."""
+    if not (0.0 <= val_fraction < 1.0 and 0.0 < test_fraction < 1.0 and val_fraction + test_fraction < 1.0):
+        raise ValueError("fractions must satisfy 0 <= val < 1, 0 < test < 1, val + test < 1")
+    unique, _dropped = distinct_images(records)
+    low, high = byod_record_limits(val_fraction, test_fraction)
+    sizes = _split_sizes(len(unique), val_fraction, test_fraction)
+    minimums = split_minimums()
+    if not low <= len(unique) <= high:
+        short = next((name for name in ("train", "validation", "test") if sizes[name] < (minimums[name] if name != "validation" or val_fraction > 0 else 0)), "train")
+        reason = (
+            f"the {short} split would hold {max(sizes[short], 0)} photographs (at least {minimums[short]} are required)"
+            if len(unique) < low
+            else f"a split would hold more than {MAX_RECORDS} photographs"
+        )
+        raise ValueError(
+            f"{reason}: {len(unique)} distinct photographs split into train/validation/test as "
+            f"{max(sizes['train'], 0)}/{sizes['validation']}/{sizes['test']}; a BYOD dataset needs {low}..{high} distinct "
+            "photographs (one homography pair per photograph). "
+            + ("Add photographs" if len(unique) < low else "Use fewer photographs")
+            + " and run the cell again"
+        )
     rng = random.Random(seed)
     rng.shuffle(unique)
-    n_test = max(1, round(len(unique) * test_fraction))
-    n_val = round(len(unique) * val_fraction)
+    n_test, n_val = sizes["test"], sizes["validation"]
     parts = {"test": unique[:n_test], "validation": unique[n_test : n_test + n_val], "train": unique[n_test + n_val :]}
-    if len(parts["train"]) < MIN_RECORDS:
-        raise ValueError(f"split leaves {len(parts['train'])} training images; at least {MIN_RECORDS} are required")
     out = {}
     for offset, (name, part) in enumerate(parts.items()):
         relabelled = [{**r, "id": f"{name}-{i:03d}", "source_id": r["id"]} for i, r in enumerate(part)]
@@ -4076,7 +4167,8 @@ def load_byod_dataset(path: str | Path) -> list[dict[str, Any]]:
     for name in names:
         image = loader(name)
         image.load()
-        out.append({"id": re.sub(r"[^A-Za-z0-9_.:-]", "_", Path(name).stem)[:64], "image": image.convert("RGB")})
+        record_id = re.sub(r"[^A-Za-z0-9_.:-]", "_", Path(name).stem)[:64]
+        out.append({"id": record_id, "image": image.convert("RGB"), "original_size": [int(image.width), int(image.height)]})
     return out
 
 
