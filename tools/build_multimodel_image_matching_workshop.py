@@ -124,6 +124,12 @@ def build_notebook():
                         "owner_decisions":{"MAT2-M1":"A: narrow the question to the two configured systems","MAT2-m4":"A: no BYOD development split; warn below one test pair per tier"},
                         "evidence":"CPU checks and acceptance checks only; a hosted Run all of this blob is still required",
                     },
+                    {
+                        "date":"2026-10-13",
+                        "review":"capstone round 2026-10-12, workshop W11, peer review of the MAT2 fixes (items 1-12 and five PR-change objections)",
+                        "change":"Rendering now uses the Pillow-coordinate homography C*H*inv(C) (C = +0.5 px), so the drawn warp equals the scored H (default-path pair images and metrics change); DLT rejects degenerate minimal samples and uses reduced SVD for overdetermined fits; realised warp parameters and overlap recorded per pair; baselines per tier; frozen configuration re-checked before the test; CSV exports write non-finite values as null; the shared envs folder is created for a BYOD-first run; wording on tiers, held-out test, RANSAC budget, timing and backend settings",
+                        "evidence":"CPU checks (coordinate-ramp fiducials, baseline metrics on the real pinned corpus) and acceptance checks only; a hosted Run all of this blob is still required",
+                    },
                 ],
                 "carried_files":{
                     "requirements.lock.txt":{"source":"tools/multimodel-image-matching-workshop-requirements.lock","sha256":lock_sha256()},

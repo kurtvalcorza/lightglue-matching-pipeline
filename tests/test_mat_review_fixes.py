@@ -146,7 +146,7 @@ def test_correspondence_plots_skip_missing_test_tiers(tmp_path, monkeypatch):
     ns = metrics_ns()
     ns.update({"plt": sys.modules["matplotlib.pyplot"], "Image": Image, "OUTPUT_ROOT": tmp_path, "TIERS": TIERS,
                "MODEL_KEYS": ["lightglue", "xoftr"], "MODEL_SPECS": {"lightglue": {"display_name": "A"}, "xoftr": {"display_name": "B"}},
-               "test_pair_rows": pair_files(tmp_path, ("easy",)),
+               "test_pair_rows": pair_files(tmp_path, ("easy",)), "compare": types.SimpleNamespace(to_dict=lambda orient: []),
                "load_model_match": lambda root, pid: {"kpts0": np.zeros((1, 2)), "kpts1": np.zeros((1, 2)), "confidence": np.ones(1)}})
     (tmp_path / "figures").mkdir()
     out = io.StringIO()
@@ -189,7 +189,8 @@ def test_runtime_section_is_a_lesson_and_parity_is_a_table():
     cell = src("dimer-matching-workshop-43")
     assert "[:5000]" not in cell and "parity_rows" in cell
     cell39 = src("dimer-matching-workshop-39")
-    assert "LightGlue + ALIKED is most ahead" in cell39 and "XoFTR is most ahead" in cell39
+    assert 'compare[compare["precision_advantage_lightglue"]>0]' in cell39 and 'compare[compare["precision_advantage_lightglue"]<0]' in cell39
+    assert "is most ahead on precision@3px" in cell39 and "No test pair where {label} is ahead" in cell39
 
 
 # ------------------------------------------------------------------ MAT-M3
@@ -351,8 +352,10 @@ def test_activity_is_off_by_default_and_runs_without_writing(tmp_path):
     assert snapshot(out) == before
     rows = {(r["model"], r["tier"]): r for r in tables[0]}
     assert len(rows) == 6
-    assert rows[("LightGlue + ALIKED", "easy")]["retained_fraction"] == 1.0
-    assert rows[("XoFTR", "easy")]["precision_3px"] == 1.0 and rows[("XoFTR", "easy")]["retained_fraction"] == 0.0
+    assert rows[("LightGlue + ALIKED", "easy")]["macro_precision_ratio"] == 1.0
+    assert rows[("LightGlue + ALIKED", "easy")]["pooled_retained_fraction"] == 1.0
+    assert rows[("XoFTR", "easy")]["precision_3px"] == 1.0 and rows[("XoFTR", "easy")]["macro_precision_ratio"] == 0.0
+    assert rows[("XoFTR", "easy")]["pooled_retained_fraction"] == 0.0
 
 
 @pytest.mark.parametrize("bad", [0, 3, 4.5, -1])
