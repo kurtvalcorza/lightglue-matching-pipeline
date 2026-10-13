@@ -54,7 +54,7 @@ def markdown():
 def functions(source, *names, ns=None):
     ns = {} if ns is None else ns
     module = ast.parse(source)
-    module.body = [n for n in module.body if isinstance(n, (ast.FunctionDef, ast.Import, ast.ImportFrom)) and (not isinstance(n, ast.FunctionDef) or not names or n.name in names)]
+    module.body = [n for n in module.body if isinstance(n, (ast.FunctionDef, ast.ClassDef, ast.Import, ast.ImportFrom)) and (not isinstance(n, ast.FunctionDef) or not names or n.name in names)]
     exec(compile(module, "cell", "exec"), ns)
     return ns
 
@@ -156,9 +156,10 @@ def test_correspondence_plots_skip_missing_test_tiers(tmp_path, monkeypatch):
     assert len(calls) == 2  # easy tier only, both models
 
 
-def test_byod_prose_states_the_thirteen_photo_tier_condition():
+def test_byod_prose_states_the_seven_photo_tier_condition():
+    # MAT2-m4: without a development split, 7 photos give 3 validation and 4 test pairs (every tier).
     byod = next(m for m in markdown() if m.startswith("## 20. BYOD"))
-    assert "fewer than 13 photos" in byod and "n = 0" in byod
+    assert "fewer than 7 photos" in byod and "n = 0" in byod
 
 
 # ------------------------------------------------------------------ MAT-M2
@@ -292,7 +293,7 @@ def test_byod_runs_share_the_matcher_environment(tmp_path, monkeypatch):
 # ------------------------------------------------------------------ MAT-m3
 def test_runtime_disclosure_and_cpu_warning():
     opening = src("dimer-matching-workshop-01")
-    for fact in ("37.4 MiB", "47.6 MB", "44.4 MB", "0.17 s per pair", "0.29 s per pair", "2026-09-26", "an estimate"):
+    for fact in ("37.4 MiB", "47.6 MB", "44.4 MB", "0.168 s per pair", "0.294 s per pair", "896.9 s", "`e2ee0f4`", "`4991047a0590`", "an estimate"):
         assert fact in opening
     assert "Warning: No CUDA GPU was used" in src("dimer-matching-workshop-28")
 
@@ -379,7 +380,7 @@ def test_information_architecture():
 
 def test_review_revision_is_recorded_in_metadata():
     meta = json.loads(NOTEBOOK.read_text(encoding="utf-8"))["metadata"]["dimer"]
-    revision = [entry for entry in meta["review_revisions"] if "review" in entry][-1]
+    revision = next(entry for entry in meta["review_revisions"] if entry["date"] == "2026-10-02")
     assert revision["date"] == "2026-10-02" and revision["review"].endswith("DIMER_MultiModel_Image_Matching_Workshop_Review.md")
     assert meta["clean_runtime_evidence"] == "pending" and meta["release_status"] == "candidate"
 

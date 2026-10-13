@@ -21,7 +21,8 @@ def helpers(tmp_path):
     ns = {"WORK_ROOT": tmp_path, "Path": Path}
     module = ast.parse(cell(11)["source"])
     module.body = [
-        n for n in module.body if isinstance(n, (ast.FunctionDef, ast.Import, ast.ImportFrom))
+        n for n in module.body
+        if isinstance(n, (ast.FunctionDef, ast.ClassDef, ast.Import, ast.ImportFrom))
     ]
     exec(compile(module, "loader", "exec"), ns)
     module = ast.parse(cell(13)["source"])
@@ -42,7 +43,8 @@ def test_valid_local_photos_split_and_hash(tmp_path):
     ns = helpers(tmp_path)
     records = ns["load_byod_photos"](photos(tmp_path))
     split = ns["byod_split"](records)
-    assert {k: len(v) for k, v in split.items()} == {"train": 2, "validation": 1, "test": 1}
+    # MAT2-m4: no BYOD development split
+    assert {k: len(v) for k, v in split.items()} == {"train": 0, "validation": 2, "test": 2}
     assert all(len(r["pixel_sha256"]) == 64 for r in records)
 
 
@@ -155,11 +157,13 @@ def test_controls_isolate_byod_outputs(tmp_path, monkeypatch):
     source = cell(4)["source"].replace("USE_BYOD = False", "USE_BYOD = True")
     ns = {}
     exec(source, ns)
-    first = ns["OUTPUT_ROOT"]
-    assert first.is_dir()
+    first = ns["WORK_ROOT"]
+    # MAT2-m3: the BYOD output folder is created only after the photos are accepted (section 4).
+    assert first.is_dir() and not ns["OUTPUT_ROOT"].exists()
+    assert not (Path("outputs") / "byod").exists()
     ns = {}
     exec(source, ns)
-    assert ns["OUTPUT_ROOT"] != first
+    assert ns["WORK_ROOT"] != first
     assert not ns["WORK_ROOT"].is_relative_to(ns["OUTPUT_ROOT"])
     assert ns["WORK_ROOT"].parent == (Path("work") / "byod").resolve()
 

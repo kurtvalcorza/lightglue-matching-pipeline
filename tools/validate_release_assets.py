@@ -24,6 +24,7 @@ PACKAGE = "lightglue_pipeline"
 REPO_NAME = "lightglue-matching-pipeline"
 NOTEBOOK_NAME = "lightglue_matching_colab.ipynb"
 WORKSHOP_NOTEBOOK_NAME = "DIMER_MultiModel_Image_Matching_Workshop.ipynb"
+WORKSHOP_NOTEBOOK_SPEC = "2.5"  # the workshop declares its own spec version (MAT2-S1)
 EXPECTED_PROFILE = "E2E"
 EXPECTED_MODEL_ID = "cvg/LightGlue"
 PIPELINE_CLASS = "LightGluePipeline"
@@ -828,6 +829,11 @@ def validate_notebooks() -> None:
     _check(
         f"`{WORKSHOP_NOTEBOOK_NAME}`" in registry,
         f"{WORKSHOP_NOTEBOOK_NAME} missing from tutorials/README.md",
+    )
+    workshop_meta = json.loads(_read(tutorials / WORKSHOP_NOTEBOOK_NAME)).get("metadata", {}).get("dimer", {})
+    _check(
+        workshop_meta.get("notebook_spec") == WORKSHOP_NOTEBOOK_SPEC,
+        f"{WORKSHOP_NOTEBOOK_NAME}: metadata.dimer.notebook_spec must be '{WORKSHOP_NOTEBOOK_SPEC}'",
     )
     _check(f"`{EXPECTED_PROFILE}`" in registry, f"tutorials/README.md must record `{EXPECTED_PROFILE}`")
     _check(

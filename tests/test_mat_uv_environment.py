@@ -125,6 +125,6 @@ def test_lock_pieces_are_short_and_rejoin_exactly():
 
 def test_uv_revision_is_logged_in_metadata():
     meta = json.loads(NOTEBOOK.read_text(encoding="utf-8"))["metadata"]["dimer"]
-    latest = meta["review_revisions"][-1]
+    latest = next(r for r in meta["review_revisions"] if r["date"] == "2026-10-04")
     assert latest["date"] == "2026-10-04" and "uv 0.12.15" in latest["change"] and "--require-hashes" in latest["change"]
     assert meta["clean_runtime_evidence"] == "pending" and meta["release_status"] == "candidate"

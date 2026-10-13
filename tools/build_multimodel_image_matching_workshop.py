@@ -94,7 +94,7 @@ def build_notebook():
                 "dimer_checkpoint_parity":"qualification-required",
                 "notebook_mode":"WORKSHOP",
                 "notebook_profile":"TASK-INFERENCE",
-                "notebook_spec":"2.1",
+                "notebook_spec":"2.5",
                 "release_status":"candidate",
                 "standalone":True,
                 "worker_required":False,
@@ -115,6 +115,14 @@ def build_notebook():
                         "date":"2026-10-04",
                         "change":"uv isolated environment brought to the fleet standard: the kernel no longer pip-installs uv; a pinned uv 0.12.15 wheel is downloaded and checked by size and SHA-256, builds a managed CPython 3.12.12 venv and installs a carried hash lock (uv pip compile --generate-hashes, x86_64-manylinux_2_28) with --require-hashes --only-binary :all:; child processes get MPLBACKEND=Agg and no PYTHONPATH/PYTHONHOME/PYTHONSTARTUP; same direct pins (vismatch 1.3.2, torch 2.14.0, torchvision 0.29.0); Linux x86_64 only",
                         "evidence":"local tests and a CPU import audit in a venv built from the lock; a hosted Run all of this blob is still required",
+                    },
+                    {
+                        "date":"2026-10-13",
+                        "review":"capstone round 2026-10-12, workshop W11 (MAT2 findings)",
+                        "reviewed_commit":"49064b896dc9aa6a9f9b3e68e7cc5362b49e7c56",
+                        "findings_fixed":["MAT2-M1","MAT2-m1","MAT2-m2","MAT2-m3","MAT2-m4","MAT2-S1","MAT2-S2","MAT2-S4"],
+                        "owner_decisions":{"MAT2-M1":"A: narrow the question to the two configured systems","MAT2-m4":"A: no BYOD development split; warn below one test pair per tier"},
+                        "evidence":"CPU checks and acceptance checks only; a hosted Run all of this blob is still required",
                     },
                 ],
                 "carried_files":{
