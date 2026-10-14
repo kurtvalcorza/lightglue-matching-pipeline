@@ -54,7 +54,7 @@ def markdown():
 def functions(source, *names, ns=None):
     ns = {} if ns is None else ns
     module = ast.parse(source)
-    module.body = [n for n in module.body if isinstance(n, (ast.FunctionDef, ast.Import, ast.ImportFrom)) and (not isinstance(n, ast.FunctionDef) or not names or n.name in names)]
+    module.body = [n for n in module.body if isinstance(n, (ast.FunctionDef, ast.ClassDef, ast.Import, ast.ImportFrom)) and (not isinstance(n, ast.FunctionDef) or not names or n.name in names)]
     exec(compile(module, "cell", "exec"), ns)
     return ns
 
@@ -146,7 +146,7 @@ def test_correspondence_plots_skip_missing_test_tiers(tmp_path, monkeypatch):
     ns = metrics_ns()
     ns.update({"plt": sys.modules["matplotlib.pyplot"], "Image": Image, "OUTPUT_ROOT": tmp_path, "TIERS": TIERS,
                "MODEL_KEYS": ["lightglue", "xoftr"], "MODEL_SPECS": {"lightglue": {"display_name": "A"}, "xoftr": {"display_name": "B"}},
-               "test_pair_rows": pair_files(tmp_path, ("easy",)),
+               "test_pair_rows": pair_files(tmp_path, ("easy",)), "compare": types.SimpleNamespace(to_dict=lambda orient: []),
                "load_model_match": lambda root, pid: {"kpts0": np.zeros((1, 2)), "kpts1": np.zeros((1, 2)), "confidence": np.ones(1)}})
     (tmp_path / "figures").mkdir()
     out = io.StringIO()
@@ -156,9 +156,10 @@ def test_correspondence_plots_skip_missing_test_tiers(tmp_path, monkeypatch):
     assert len(calls) == 2  # easy tier only, both models
 
 
-def test_byod_prose_states_the_thirteen_photo_tier_condition():
+def test_byod_prose_states_the_seven_photo_tier_condition():
+    # MAT2-m4: without a development split, 7 photos give 3 validation and 4 test pairs (every tier).
     byod = next(m for m in markdown() if m.startswith("## 20. BYOD"))
-    assert "fewer than 13 photos" in byod and "n = 0" in byod
+    assert "fewer than 7 photos" in byod and "n = 0" in byod
 
 
 # ------------------------------------------------------------------ MAT-M2
@@ -188,7 +189,8 @@ def test_runtime_section_is_a_lesson_and_parity_is_a_table():
     cell = src("dimer-matching-workshop-43")
     assert "[:5000]" not in cell and "parity_rows" in cell
     cell39 = src("dimer-matching-workshop-39")
-    assert "LightGlue + ALIKED is most ahead" in cell39 and "XoFTR is most ahead" in cell39
+    assert 'compare[compare["precision_advantage_lightglue"]>0]' in cell39 and 'compare[compare["precision_advantage_lightglue"]<0]' in cell39
+    assert "is most ahead on precision@3px" in cell39 and "No test pair where {label} is ahead" in cell39
 
 
 # ------------------------------------------------------------------ MAT-M3
@@ -292,7 +294,7 @@ def test_byod_runs_share_the_matcher_environment(tmp_path, monkeypatch):
 # ------------------------------------------------------------------ MAT-m3
 def test_runtime_disclosure_and_cpu_warning():
     opening = src("dimer-matching-workshop-01")
-    for fact in ("37.4 MiB", "47.6 MB", "44.4 MB", "0.17 s per pair", "0.29 s per pair", "2026-09-26", "an estimate"):
+    for fact in ("37.4 MiB", "47.6 MB", "44.4 MB", "0.168 s per pair", "0.294 s per pair", "896.9 s", "`e2ee0f4`", "`4991047a0590`", "an estimate"):
         assert fact in opening
     assert "Warning: No CUDA GPU was used" in src("dimer-matching-workshop-28")
 
@@ -350,8 +352,10 @@ def test_activity_is_off_by_default_and_runs_without_writing(tmp_path):
     assert snapshot(out) == before
     rows = {(r["model"], r["tier"]): r for r in tables[0]}
     assert len(rows) == 6
-    assert rows[("LightGlue + ALIKED", "easy")]["retained_fraction"] == 1.0
-    assert rows[("XoFTR", "easy")]["precision_3px"] == 1.0 and rows[("XoFTR", "easy")]["retained_fraction"] == 0.0
+    assert rows[("LightGlue + ALIKED", "easy")]["macro_precision_ratio"] == 1.0
+    assert rows[("LightGlue + ALIKED", "easy")]["pooled_retained_fraction"] == 1.0
+    assert rows[("XoFTR", "easy")]["precision_3px"] == 1.0 and rows[("XoFTR", "easy")]["macro_precision_ratio"] == 0.0
+    assert rows[("XoFTR", "easy")]["pooled_retained_fraction"] == 0.0
 
 
 @pytest.mark.parametrize("bad", [0, 3, 4.5, -1])
@@ -379,7 +383,7 @@ def test_information_architecture():
 
 def test_review_revision_is_recorded_in_metadata():
     meta = json.loads(NOTEBOOK.read_text(encoding="utf-8"))["metadata"]["dimer"]
-    revision = [entry for entry in meta["review_revisions"] if "review" in entry][-1]
+    revision = next(entry for entry in meta["review_revisions"] if entry["date"] == "2026-10-02")
     assert revision["date"] == "2026-10-02" and revision["review"].endswith("DIMER_MultiModel_Image_Matching_Workshop_Review.md")
     assert meta["clean_runtime_evidence"] == "pending" and meta["release_status"] == "candidate"
 
