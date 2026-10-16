@@ -327,12 +327,14 @@ def test_identity_and_access_text_is_per_source():
 def test_worked_answers_quote_the_recorded_t4_run_and_state_the_direction_difference():
     markdown = _markdown()
     assert "**Run-to-run spread.**" in markdown and "**0.768 on the recorded Kaggle Tesla T4 run**" in markdown
+    assert "no uncertainty estimate was computed" in markdown
     assert "0.708 → 0.698 (down) on the CPU and 0.708 → 0.719 (up) on the T4" in markdown
     assert "rose 0.750 → 0.768 (+0.018)" in markdown and "0.500 → 0.538" in markdown
     assert "the build record measured 0.750 → 0.765" not in markdown
-    # LGT-m1 (REL13): the quoted run is named by blob and marked as predating the LGT-M1 render fix, refresh pending.
-    assert "In the recorded T4 run of blob `d5e562ea` precision at 3" in markdown
-    assert "they will be refreshed from the hosted run of this version, which is pending" in markdown
+    # LGT-m1 (REL13) and the Codex follow-up: earlier figures live in a labelled Historical note, not in worked answers.
+    note = markdown.split("## Historical note")[1].split("## Troubleshooting")[0]
+    assert "blob `d5e562ea`" in note and "rose 0.750 → 0.768 (+0.018)" in note and "0.245 → 0.223" in note
+    assert "aren't directly comparable with this version" in note
 
 
 def test_runtime_statement_names_the_isolated_python_and_spec():

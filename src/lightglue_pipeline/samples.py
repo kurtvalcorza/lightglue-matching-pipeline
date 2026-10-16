@@ -3789,7 +3789,7 @@ def sample_homography(size: tuple[int, int], rng: random.Random, params: Mapping
 # metrics and the matcher's keypoints use integer pixel centres. Rendering with C·H·C⁻¹ (C shifts by +0.5 px) makes
 # the drawn warp exactly `H` in integer-centre coordinates; `H` itself is kept for scoring. Rendering with `H`
 # directly drew C⁻¹·H·C, off by (A - I)·(0.5, 0.5) for the linear part A: 0 px for a shift, 1.0 px at 90°,
-# 1.44 px at 180° (review LGT-M1; the workshop's fix, PR #14).
+# √2 ≈ 1.41 px at 180° (review LGT-M1; the workshop's fix, PR #14).
 PIXEL_CENTRE_SHIFT = np.array([[1.0, 0.0, 0.5], [0.0, 1.0, 0.5], [0.0, 0.0, 1.0]])
 
 
