@@ -102,3 +102,40 @@ def test_mutual_nn_matches_pairs_only_mutual_neighbours():
     assert empty.shape == (0, 2)
     with pytest.raises(ValueError, match="common D"):
         mutual_nn_matches(d0, np.zeros((2, 3)))
+
+
+# --- review #13 (row 40 / row 114): dlt_homography requires numerical rank 8 ------------------------------------
+
+
+def _square_h():
+    return np.array([[1.1, 0.05, 3.0], [-0.04, 0.95, -2.0], [1e-4, -5e-5, 1.0]])
+
+
+def test_dlt_accepts_a_valid_four_point_sample():
+    pts = np.array([[10.0, 12.0], [200.0, 15.0], [190.0, 160.0], [20.0, 150.0]])
+    H = _square_h()
+    est = dlt_homography(pts, warp_points(pts, H))
+    assert est is not None and np.allclose(est, H / H[2, 2], atol=1e-8)
+
+
+def test_dlt_refuses_a_minimal_sample_with_three_collinear_points():
+    pts = np.array([[0.0, 0.0], [50.0, 50.0], [100.0, 100.0], [10.0, 90.0]])
+    assert dlt_homography(pts, warp_points(pts, _square_h())) is None
+
+
+def test_dlt_refuses_a_repeated_point():
+    pts = np.array([[10.0, 12.0], [10.0, 12.0], [190.0, 160.0], [20.0, 150.0]])
+    assert dlt_homography(pts, warp_points(pts, _square_h())) is None
+
+
+def test_dlt_refuses_a_near_degenerate_minimal_sample():
+    pts = np.array([[0.0, 0.0], [50.0, 50.0 + 1e-12], [100.0, 100.0], [10.0, 90.0]])
+    assert dlt_homography(pts, warp_points(pts, _square_h())) is None
+
+
+def test_dlt_fits_an_overdetermined_noisy_set():
+    rng = np.random.default_rng(0)
+    pts = rng.uniform(0.0, 300.0, size=(40, 2))
+    H = _square_h()
+    est = dlt_homography(pts, warp_points(pts, H) + rng.normal(0.0, 0.05, size=(40, 2)))
+    assert est is not None and np.abs(warp_points(pts, est) - warp_points(pts, H)).max() < 0.5
