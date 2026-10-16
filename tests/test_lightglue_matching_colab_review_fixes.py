@@ -178,13 +178,13 @@ def test_byod_records_carry_their_original_size(tmp_path):
 
 
 def test_cancelled_upload_no_colab_and_missing_path_are_actionable(monkeypatch, tmp_path):
-    with pytest.raises(FileNotFoundError, match="does not exist in this runtime"):
+    with pytest.raises(lg.BYODRefused, match="does not exist in this runtime"):  # LGT-m4: one message
         _section4(monkeypatch, tmp_path, byod_path=str(tmp_path / "missing.zip"))
     monkeypatch.setitem(sys.modules, "google.colab", None)
-    with pytest.raises(RuntimeError, match="set BYOD_PATH to its path"):
+    with pytest.raises(lg.BYODRefused, match="set BYOD_PATH to its path"):
         _section4(monkeypatch, tmp_path)
     _fake_colab(monkeypatch, [{}])
-    with pytest.raises(ValueError, match="Upload exactly one .zip file"):
+    with pytest.raises(lg.BYODRefused, match="Upload exactly one .zip file"):
         _section4(monkeypatch, tmp_path)
 
 
@@ -327,14 +327,19 @@ def test_identity_and_access_text_is_per_source():
 def test_worked_answers_quote_the_recorded_t4_run_and_state_the_direction_difference():
     markdown = _markdown()
     assert "**Run-to-run spread.**" in markdown and "**0.768 on the recorded Kaggle Tesla T4 run**" in markdown
+    assert "no uncertainty estimate was computed" in markdown
     assert "0.708 → 0.698 (down) on the CPU and 0.708 → 0.719 (up) on the T4" in markdown
     assert "rose 0.750 → 0.768 (+0.018)" in markdown and "0.500 → 0.538" in markdown
     assert "the build record measured 0.750 → 0.765" not in markdown
+    # LGT-m1 (REL13) and the Codex follow-up: earlier figures live in a labelled Historical note, not in worked answers.
+    note = markdown.split("## Historical note")[1].split("## Troubleshooting")[0]
+    assert "blob `d5e562ea`" in note and "rose 0.750 → 0.768 (+0.018)" in note and "0.245 → 0.223" in note
+    assert "aren't directly comparable with this version" in note
 
 
 def test_runtime_statement_names_the_isolated_python_and_spec():
     nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
-    assert nb["metadata"]["dimer"]["notebook_spec"] == "2.2"
+    assert nb["metadata"]["dimer"]["notebook_spec"] == "2.5"
     markdown = _markdown()
     assert "Section 1 builds its own **Python 3.12.12** environment" in markdown and "Python 3.13" in markdown
 

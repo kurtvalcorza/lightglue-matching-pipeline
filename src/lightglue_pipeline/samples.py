@@ -3785,15 +3785,30 @@ def sample_homography(size: tuple[int, int], rng: random.Random, params: Mapping
     return perspective @ similarity
 
 
+# Pillow puts pixel centres at half-integer coordinates (pixel i spans [i, i + 1)), while the reference `H`, the
+# metrics and the matcher's keypoints use integer pixel centres. Rendering with C·H·C⁻¹ (C shifts by +0.5 px) makes
+# the drawn warp exactly `H` in integer-centre coordinates; `H` itself is kept for scoring. Rendering with `H`
+# directly drew C⁻¹·H·C, off by (A - I)·(0.5, 0.5) for the linear part A: 0 px for a shift, 1.0 px at 90°,
+# √2 ≈ 1.41 px at 180° (review LGT-M1; the workshop's fix, PR #14).
+PIXEL_CENTRE_SHIFT = np.array([[1.0, 0.0, 0.5], [0.0, 1.0, 0.5], [0.0, 0.0, 1.0]])
+
+
+def pillow_homography(homography: np.ndarray) -> np.ndarray:
+    """The integer-pixel-centre homography `H` expressed in Pillow's pixel-edge coordinates: C·H·C⁻¹."""
+    return PIXEL_CENTRE_SHIFT @ np.asarray(homography, dtype=np.float64) @ np.linalg.inv(PIXEL_CENTRE_SHIFT)
+
+
 def _perspective_coefficients(homography: np.ndarray) -> list[float]:
-    """PIL's PERSPECTIVE transform takes the inverse mapping (output pixel -> input pixel), 8 coefficients."""
-    inverse = np.linalg.inv(homography)
+    """PIL's PERSPECTIVE transform takes the inverse mapping (output pixel -> input pixel), 8 coefficients, in
+    Pillow's pixel-edge coordinates, so `homography` is converted with `pillow_homography` first."""
+    inverse = np.linalg.inv(pillow_homography(homography))
     inverse = inverse / inverse[2, 2]
     return [float(v) for v in inverse.ravel()[:8]]
 
 
 def warp_image(image: Image.Image, homography: np.ndarray) -> Image.Image:
-    """image1 = image0 warped by `homography` (image0 coords -> image1 coords), same canvas, black outside."""
+    """image1 = image0 warped by `homography` (image0 coords -> image1 coords, integer pixel centres), same
+    canvas, black outside."""
     return image.transform(image.size, Image.PERSPECTIVE, _perspective_coefficients(homography), Image.BICUBIC)
 
 
@@ -4145,6 +4160,29 @@ def split_dataset(
         relabelled = [{**r, "id": f"{name}-{i:03d}", "source_id": r["id"]} for i, r in enumerate(part)]
         out[name] = make_pairs(relabelled, seed=seed + offset)
     return out
+
+
+class BYODRefused(ValueError):
+    """A refused BYOD input (NOTEBOOK_SPEC DAT20). IPython, and the notebook's isolated runtime, show only this one
+    message, with no traceback, and Run all stops at the cell that raised it."""
+
+    dimer_message_only = True
+
+    def _render_traceback_(self) -> list[str]:
+        return [f"BYOD refused: {self}"]
+
+
+def refuse_byod(exc: BaseException, *, byod: bool = True) -> None:
+    """Stop the BYOD intake with one message that names the problem and the next step.
+
+    Outside BYOD (`byod=False`) the error is re-raised unchanged: a failure on the pinned sample is a defect to
+    report with its traceback, not a refusal of the learner's input."""
+    if not byod:
+        raise exc
+    raise BYODRefused(
+        f"{exc} Nothing was matched or trained, and the files in outputs/ are still the previous run's. Fix the input, "
+        "then select Section 4 and choose Run after again."
+    ) from None
 
 
 def load_byod_dataset(path: str | Path) -> list[dict[str, Any]]:

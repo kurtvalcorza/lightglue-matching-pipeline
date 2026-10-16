@@ -1,0 +1,99 @@
+[colab] Parsing notebook '/home/kurt/colab-runs/lightglue-matching-pipeline-c89d59d-b30d26/lightglue_matching_colab_c89d59d_colab-cli-t4.ipynb'...
+[colab] Executing cell 1/18 - Infrastructure: install the locked runtime into an isolated environment...
+{'isolated_environment': '/content/dimer_isolated_env', 'isolated_python': '3.12.12', 'kernel_python': '3.13.15', 'locked_packages': 33, 'setup_seconds': 53}
+[colab] Executing cell 2/18 - Infrastructure: route the remaining cells to the isolated environment...
+Every later code cell now runs in /content/dimer_isolated_env/bin/python (pid 1058).
+[colab] Executing cell 3/18 - Infrastructure: record the runtime...
+{'notebook_source': {'repository': 'lightglue-matching-pipeline', 'repository_revision': '68bb2e1ff4703fa3f2872c8170f28b4f5999d8ec', 'embedded_module': 'src/lightglue_pipeline/config.py', 'embedded_modules': ['src/lightglue_pipeline/config.py', 'src/lightglue_pipeline/metrics.py', 'src/lightglue_pipeline/modeling.py', 'src/lightglue_pipeline/model.py', 'src/lightglue_pipeline/provenance.py', 'src/lightglue_pipeline/samples.py', 'src/lightglue_pipeline/pipeline.py'], 'module_sha256': 'aa2ec5f8f2bee305b36b317701b41b0ab389cf602ee20fa0476ba4d878f5ad2f', 'generator': 'build_notebook.py/2.1', 'notebook_spec': '2.5'}, 'python': '3.12.12', 'torch': '2.14.0+cu130', 'numpy': '2.5.3', 'cuda': True}
+[colab] Executing cell 4/18 - Infrastructure: carried module `src/lightglue_pipeline/config.py` (you may run it without reading it)...
+[colab] Executing cell 5/18 - Infrastructure: carried module `src/lightglue_pipeline/metrics.py` (you may run it without reading it)...
+[colab] Executing cell 6/18 - Infrastructure: carried module `src/lightglue_pipeline/modeling.py` (you may run it without reading it)...
+[colab] Executing cell 7/18 - Infrastructure: carried module `src/lightglue_pipeline/model.py` (you may run it without reading it)...
+[colab] Executing cell 8/18 - Infrastructure: carried module `src/lightglue_pipeline/provenance.py` (you may run it without reading it)...
+[colab] Executing cell 9/18 - Infrastructure: carried module `src/lightglue_pipeline/samples.py` (you may run it without reading it)...
+[colab] Executing cell 10/18 - Infrastructure: carried module `src/lightglue_pipeline/pipeline.py` (you may run it without reading it)...
+[colab] Executing cell 11/18 - Infrastructure: pin, stage and verify the model (you may run it without reading it)...
+{'model_id': 'cvg/LightGlue', 'revision': 'v0.1_arxiv', 'license': 'Apache-2.0', 'files': 2, 'total_bytes': 50370918}
+{'weights_dir': '/content/weights/lightglue-aliked', 'fetched': ['aliked_lightglue.pth', 'aliked-n16.pth']}
+{'verified_files': 2, 'revision': 'v0.1_arxiv'}
+{'device': device(type='cuda'), 'source': 'local-snapshot'}
+[colab] Executing cell 12/18 - lightglue_matching-25...
+{'data_source': "iNaturalist CC0 bird photographs (six species): iNaturalist open-data bucket, research-grade CC0 photos selected 2026-09-19 (60 per species) (CC0 1.0 (each photo's own license_code on iNaturalist; observers credited in the records)); one seeded homography pair per photograph", 'raw_rows': {'photographs': 360, 'bytes': 39223447, 'observers': 222}, 'splits': {'train': 216, 'validation': 48, 'test': 96}, 'split_unit': 'photograph (decoded pixels)', 'observer_overlap': {'observers': 222, 'in_more_than_one_split': 53}, 'tiers': {'easy': {'jitter': 0.06, 'rotation': 10.0, 'scale': (0.9, 1.1), 'brightness': (0.85, 1.15), 'contrast': (0.85, 1.15), 'gamma': (1.0, 1.0), 'blur': 0.0, 'noise': 4.0}, 'hard': {'jitter': 0.18, 'rotation': 150.0, 'scale': (0.6, 1.4), 'brightness': (0.6, 1.4), 'contrast': (0.6, 1.4), 'gamma': (0.7, 1.4), 'blur': 1.2, 'noise': 10.0}}}
+{'byod_minimum_distinct_photographs': 12, 'split_minimums': {'train': 4, 'validation': 4, 'test': 4}}
+{'train': {'n': 216, 'tiers': {'easy': 108, 'hard': 108}, 'image_side': {'min': 640, 'max': 640}, 'digest': '784df03bd7a21341...'}}
+{'validation': {'n': 48, 'tiers': {'easy': 24, 'hard': 24}, 'image_side': {'min': 640, 'max': 640}, 'digest': '4e2126910616e948...'}}
+{'test': {'n': 96, 'tiers': {'easy': 48, 'hard': 48}, 'image_side': {'min': 640, 'max': 640}, 'digest': 'b5e20d35f57aa073...'}}
+{'example': {'id': 'train-000', 'tier': 'easy', 'size': [480, 640], 'corners_under_H': [[18.3, 16.5], [468.4, -1.7], [479.2, 639.0], [7.2, 631.4]], 'observation': 'https://www.inaturalist.org/observations/12337763'}}
+{'probe': 'duplicate id', 'rejected': "duplicate id 'same'"}
+{'probe': 'image over the side ceiling', 'rejected': 'records[0].image0: image side outside 1..MAX_IMAGE_SIDE=4096 px: (4097, 8)'}
+{'probe': 'singular homography', 'rejected': 'records[0].homography: matrix is singular'}
+{'probe': 'too small', 'rejected': '3 records; 4..5000 are required'}
+[colab] Executing cell 13/18 - lightglue_matching-27...
+{'ceilings': {'MIN_SIDE': 64, 'MAX_SIDE': 1024, 'DIVISIBLE_BY': 8, 'MAX_IMAGE_SIDE': 4096, 'MIN_RECORDS': 4, 'MAX_RECORDS': 5000, 'keypoints': {'max_per_image': 2048, 'detection_threshold': 0.2}, 'thresholds': {'match': 0.1}, 'device': 'cuda'}}
+{'scene_sha256': '3420b1d3755a5bf9...', 'manifest_verdict': 'accepted', 'findings': 1}
+{'checks': {'same_length': True, 'coordinates_inside_frames': True, 'confidences_in_unit_interval': True, 'some_matches': True}, 'seconds': 0.86, 'frozen_scene': {'precision_3px': 1.0, 'n_inliers': 32, 'corner_error_px': 0.464}, 'verdict': 'sample-sanity', 'first_matches': [[30.200000762939453, 30.100000381469727, 42.20000076293945, 22.899999618530273], [62.599998474121094, 30.200000762939453, 72.9000015258789, 21.700000762939453], [94.5999984741211, 30.100000381469727, 104.0, 20.100000381469727]]}
+[colab] Executing cell 14/18 - lightglue_matching-29...
+median_error_px is a conditional inlier error: the median reprojection error of matches below 3 px only.
+{'progress': 'identity', 'pairs': '96/96', 'seconds': 0.6}
+{'progress': 'patch_neighbour', 'pairs': '9/96', 'seconds': 30.6}
+{'progress': 'patch_neighbour', 'pairs': '19/96', 'seconds': 61.9}
+{'progress': 'patch_neighbour', 'pairs': '28/96', 'seconds': 93.3}
+{'progress': 'patch_neighbour', 'pairs': '37/96', 'seconds': 124.1}
+{'progress': 'patch_neighbour', 'pairs': '47/96', 'seconds': 156.3}
+{'progress': 'patch_neighbour', 'pairs': '56/96', 'seconds': 186.9}
+{'progress': 'patch_neighbour', 'pairs': '66/96', 'seconds': 219.2}
+{'progress': 'patch_neighbour', 'pairs': '75/96', 'seconds': 249.9}
+{'progress': 'patch_neighbour', 'pairs': '84/96', 'seconds': 282.0}
+{'progress': 'patch_neighbour', 'pairs': '94/96', 'seconds': 314.5}
+{'progress': 'patch_neighbour', 'pairs': '96/96', 'seconds': 322.8}
+{'progress': 'descriptor_nn', 'pairs': '91/96', 'seconds': 30.0}
+{'progress': 'descriptor_nn', 'pairs': '96/96', 'seconds': 31.5}
+{'baseline_seconds': 357.1, 'per_baseline_seconds': {'identity': 0.637, 'patch_neighbour': 322.811, 'descriptor_nn': 31.513}}
+{'identity': {'precision_3px': 0.006, 'precision_1px': 0.0, 'matches_per_pair': 267.188, 'inliers_per_pair': 1.677, 'median_error_px': 2.325, 'homography_acc_3px': 0.0, 'homography_acc_5px': 0.0}, 'by_tier': {'easy': {'precision_3px': 0.012, 'precision_1px': 0.001, 'matches_per_pair': 262.833, 'inliers_per_pair': 3.271, 'median_error_px': 2.325, 'homography_acc_3px': 0.0, 'homography_acc_5px': 0.0}, 'hard': {'precision_3px': 0.0, 'precision_1px': 0.0, 'matches_per_pair': 271.542, 'inliers_per_pair': 0.083, 'median_error_px': 2.006, 'homography_acc_3px': 0.0, 'homography_acc_5px': 0.0}}}
+{'patch_neighbour': {'precision_3px': 0.346, 'precision_1px': 0.294, 'matches_per_pair': 267.188, 'inliers_per_pair': 91.729, 'median_error_px': 0.53, 'homography_acc_3px': 0.448, 'homography_acc_5px': 0.458}, 'by_tier': {'easy': {'precision_3px': 0.652, 'precision_1px': 0.566, 'matches_per_pair': 262.833, 'inliers_per_pair': 172.729, 'median_error_px': 0.516, 'homography_acc_3px': 0.854, 'homography_acc_5px': 0.875}, 'hard': {'precision_3px': 0.041, 'precision_1px': 0.023, 'matches_per_pair': 271.542, 'inliers_per_pair': 10.729, 'median_error_px': 0.906, 'homography_acc_3px': 0.042, 'homography_acc_5px': 0.042}}}
+{'descriptor_nn': {'precision_3px': 0.625, 'precision_1px': 0.548, 'matches_per_pair': 625.625, 'inliers_per_pair': 506.417, 'median_error_px': 0.353, 'homography_acc_3px': 0.625, 'homography_acc_5px': 0.656}, 'by_tier': {'easy': {'precision_3px': 0.981, 'precision_1px': 0.919, 'matches_per_pair': 840.354, 'inliers_per_pair': 827.271, 'median_error_px': 0.319, 'homography_acc_3px': 1.0, 'homography_acc_5px': 1.0}, 'hard': {'precision_3px': 0.27, 'precision_1px': 0.177, 'matches_per_pair': 410.896, 'inliers_per_pair': 185.562, 'median_error_px': 0.625, 'homography_acc_3px': 0.25, 'homography_acc_5px': 0.312}}}
+{'progress': 'frozen model', 'pairs': '96/96', 'seconds': 22.3}
+{'frozen_model_test': {'precision_3px': 0.738, 'precision_1px': 0.579, 'matches_per_pair': 583.073, 'inliers_per_pair': 556.385, 'median_error_px': 0.381, 'homography_acc_3px': 0.698, 'homography_acc_5px': 0.75}, 'n': 96, 'verdict': 'measured', 'adapted': False, 'seconds': 23.0}
+{'by_tier_frozen': {'easy': {'precision_3px': 0.999, 'precision_1px': 0.935, 'matches_per_pair': 838.354, 'inliers_per_pair': 837.854, 'median_error_px': 0.32, 'homography_acc_3px': 1.0, 'homography_acc_5px': 1.0}, 'hard': {'precision_3px': 0.477, 'precision_1px': 0.223, 'matches_per_pair': 327.792, 'inliers_per_pair': 274.917, 'median_error_px': 0.845, 'homography_acc_3px': 0.396, 'homography_acc_5px': 0.5}}}
+{'definitions': {'precision_3px': 'fraction of returned matches whose reprojection error under the reference homography is below 3 px, averaged over pairs (a pair with no matches scores 0); in 0..1', 'precision_1px': 'the same at 1 px', 'precision_5px': 'the same at 5 px', 'matches_per_pair': 'mean number of returned matches per pair', 'inliers_per_pair': 'mean number of returned matches under 3 px per pair', 'median_error_px': 'median reprojection error of the inliers under 3 px, pooled over pairs; px', 'homography_acc_3px': 'fraction of pairs whose RANSAC-DLT homography from the matches moves the four corners by less than 3 px on average against the reference; in 0..1', 'homography_acc_5px': 'the same at 5 px'}}
+{'weakest_pairs_frozen': [{'id': 'test-003', 'tier': 'hard', 'n_matches': 5, 'precision_3px': 0.0, 'corner_error_px': 433.90613477381163}, {'id': 'test-011', 'tier': 'hard', 'n_matches': 6, 'precision_3px': 0.0, 'corner_error_px': 560.5383660562467}, {'id': 'test-013', 'tier': 'hard', 'n_matches': 25, 'precision_3px': 0.0, 'corner_error_px': 88.0371720182473}]}
+{'frozen_precision_3px_above': {'identity': True, 'patch_neighbour': True, 'descriptor_nn': True}, 'frozen_homography_acc_3px_above_identity': True}
+{'figure': 'outputs/lightglue_matching_correspondences.png', 'panels (top to bottom)': [{'id': 'test-000', 'tier': 'easy', 'matches': 1146, 'precision_3px': 1.0}, {'id': 'test-001', 'tier': 'hard', 'matches': 1611, 'precision_3px': 1.0}]}
+<PIL.Image.Image image mode=RGB size=1288x920 at 0x78DFC9B14380>
+
+[Image saved to: /tmp/tmp40dxf2dz.png]
+[colab] Executing cell 15/18 - lightglue_matching-31...
+{'progress': 'training features', 'pairs': '149/216', 'seconds': 30.3}
+{'progress': 'training features', 'pairs': '216/216', 'seconds': 45.4}
+{'progress': 'validation', 'pairs': '48/48', 'seconds': 12.9}
+{'epoch': 0, 'train_loss': None, 'val_precision_3px': 0.718, 'val_homography_acc_3px': 0.667, 'val_inliers_per_pair': 615.792, 'val_matches_per_pair': 639.167, 'val_n': 48, 'note': 'frozen model'}
+{'progress': 'validation', 'pairs': '48/48', 'seconds': 13.2}
+{'epoch': 1, 'train_loss': 3.8513, 'val_precision_3px': 0.719, 'val_homography_acc_3px': 0.688, 'val_inliers_per_pair': 616.458, 'val_matches_per_pair': 634.083, 'val_n': 48}
+{'progress': 'validation', 'pairs': '48/48', 'seconds': 13.0}
+{'epoch': 2, 'train_loss': 3.3671, 'val_precision_3px': 0.718, 'val_homography_acc_3px': 0.688, 'val_inliers_per_pair': 616.604, 'val_matches_per_pair': 634.438, 'val_n': 48}
+{'progress': 'validation', 'pairs': '48/48', 'seconds': 13.4}
+{'epoch': 3, 'train_loss': 3.1247, 'val_precision_3px': 0.717, 'val_homography_acc_3px': 0.688, 'val_inliers_per_pair': 616.875, 'val_matches_per_pair': 636.396, 'val_n': 48}
+{'trainable_parameters': 2567169, 'total_parameters': 11884625, 'best_epoch': 1, 'selection': 'highest validation precision at 3 px (ties: homography accuracy at 3 px)', 'started_from': 'pinned base (no earlier adaptation)', 'ground_truth': {'positive_px': 3.0, 'negative_px': 5.0, 'positive_pairs': 124160}, 'feature_seconds': 45.4, 'seed': 0, 'seconds': 139.3}
+[colab] Executing cell 16/18 - lightglue_matching-33...
+{'progress': 'adapted model', 'pairs': '96/96', 'seconds': 21.9}
+{'progress': 'adapted model, validation', 'pairs': '48/48', 'seconds': 12.8}
+{'precision_3px': {'identity': 0.006, 'patch_neighbour': 0.346, 'descriptor_nn': 0.625, 'frozen': 0.738, 'adapted': 0.738}}
+{'precision_1px': {'identity': 0.0, 'patch_neighbour': 0.294, 'descriptor_nn': 0.548, 'frozen': 0.579, 'adapted': 0.578}}
+{'matches_per_pair': {'identity': 267.188, 'patch_neighbour': 267.188, 'descriptor_nn': 625.625, 'frozen': 583.073, 'adapted': 579.969}}
+{'inliers_per_pair': {'identity': 1.677, 'patch_neighbour': 91.729, 'descriptor_nn': 506.417, 'frozen': 556.385, 'adapted': 557.125}}
+{'median_error_px': {'identity': 2.325, 'patch_neighbour': 0.53, 'descriptor_nn': 0.353, 'frozen': 0.381, 'adapted': 0.382}}
+{'homography_acc_3px': {'identity': 0.0, 'patch_neighbour': 0.448, 'descriptor_nn': 0.625, 'frozen': 0.698, 'adapted': 0.698}}
+{'homography_acc_5px': {'identity': 0.0, 'patch_neighbour': 0.458, 'descriptor_nn': 0.656, 'frozen': 0.75, 'adapted': 0.75}}
+{'delta_vs_frozen': {'precision_3px': 0.0, 'precision_1px': -0.001, 'matches_per_pair': -3.104, 'inliers_per_pair': 0.74, 'median_error_px': 0.001, 'homography_acc_3px': 0.0, 'homography_acc_5px': 0.0}}
+{'by_tier': {'easy': {'descriptor_nn': {'precision_3px': 0.981, 'precision_1px': 0.919, 'matches_per_pair': 840.354, 'inliers_per_pair': 827.271, 'median_error_px': 0.319, 'homography_acc_3px': 1.0, 'homography_acc_5px': 1.0}, 'frozen': {'precision_3px': 0.999, 'precision_1px': 0.935, 'matches_per_pair': 838.354, 'inliers_per_pair': 837.854, 'median_error_px': 0.32, 'homography_acc_3px': 1.0, 'homography_acc_5px': 1.0}, 'adapted': {'precision_3px': 0.998, 'precision_1px': 0.934, 'matches_per_pair': 839.792, 'inliers_per_pair': 838.604, 'median_error_px': 0.32, 'homography_acc_3px': 1.0, 'homography_acc_5px': 1.0}}, 'hard': {'descriptor_nn': {'precision_3px': 0.27, 'precision_1px': 0.177, 'matches_per_pair': 410.896, 'inliers_per_pair': 185.562, 'median_error_px': 0.625, 'homography_acc_3px': 0.25, 'homography_acc_5px': 0.312}, 'frozen': {'precision_3px': 0.477, 'precision_1px': 0.223, 'matches_per_pair': 327.792, 'inliers_per_pair': 274.917, 'median_error_px': 0.845, 'homography_acc_3px': 0.396, 'homography_acc_5px': 0.5}, 'adapted': {'precision_3px': 0.478, 'precision_1px': 0.222, 'matches_per_pair': 320.146, 'inliers_per_pair': 275.646, 'median_error_px': 0.847, 'homography_acc_3px': 0.396, 'homography_acc_5px': 0.5}}}}
+Reading: precision at 3 px 0.738 -> 0.738 (+0.000, level); homography accuracy at 3 px +0.000 (level); easy tier -0.001; hard tier +0.002. The selector kept epoch 1. The adapted matcher is not above the frozen one on these pairs; that is a result to record, and the export and reload below still run.
+{'run_history': {'run': 1, 'data_source': "iNaturalist CC0 bird photographs (six species): iNaturalist open-data bucket, research-grade CC0 photos selected 2026-09-19 (60 per species) (CC0 1.0 (each photo's own license_code on iNaturalist; observers credited in the records)); one seeded homography pair per photograph", 'trainable_layers': 2, 'epochs': 3, 'lr': 0.0001, 'best_epoch': 1, 'val_epoch0_precision_3px': 0.718, 'test_precision_3px': 0.738, 'delta_vs_frozen': 0.0}}
+{'report': 'outputs/lightglue_matching_evaluation_report.json'}
+[colab] Executing cell 17/18 - lightglue_matching-35...
+{'scene': {'frozen': {'n_matches': 32, 'precision_3px': 1.0, 'median_error_px': 0.33896127477045845}, 'adapted': {'n_matches': 32, 'precision_3px': 1.0, 'median_error_px': 0.33896127477045845}}, 'scene_after_adaptation': {'precision_3px': 1.0, 'n_inliers': 32, 'corner_error_px': 0.464}, 'verdict': 'sample-sanity'}
+{'artifact': 'outputs/lightglue_matching_adapter', 'format': 'org.valcorza.lightglue.adapter.v1', 'tensors': 48, 'bytes': 10273700, 'sha256': 'f9e4772d314843e5...', 'best_epoch': 1, 'started_from': 'pinned base (no earlier adaptation)', 'trainable_layers': 2}
+{'reload_parity': {'identical_pairs': 4, 'of': 4, 'compared': 'kpts0, kpts1 and confidence: equal shapes, allclose within PARITY_TOLERANCE', 'sampled': 'first four test pairs'}, 'reloaded_best_epoch': 1}
+['lightglue_matching_adapter', 'lightglue_matching_correspondences.png', 'lightglue_matching_evaluation_report.json', 'lightglue_matching_input_manifest.json', 'lightglue_matching_result.json', 'lightglue_matching_shapes.json', 'lightglue_matching_train.csv', 'provenance.json', 'sample-data']
+[colab] Executing cell 18/18 - lightglue_matching-37...
+{'experiment': 'not run (RUN_EXPERIMENT = False)', 'to run it': 'set RUN_EXPERIMENT = True and run this cell; the default results above are not changed'}
+[colab] Saving notebook with outputs to '/home/kurt/colab-runs/lightglue-matching-pipeline-c89d59d-b30d26/lightglue_matching_colab_c89d59d_colab-cli-t4_output.ipynb'...
