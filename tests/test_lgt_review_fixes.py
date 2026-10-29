@@ -149,8 +149,8 @@ def test_byod_refusal_renders_one_line_and_the_sample_reraises():
     with pytest.raises(samples.BYODRefused) as caught:
         samples.refuse_byod(ValueError("too few photographs for the test split"))
     lines = caught.value._render_traceback_()
-    assert len(lines) == 1 and lines[0].startswith("BYOD refused: too few photographs") and "Run after" in lines[0]
-    assert isinstance(caught.value, ValueError) and caught.value.dimer_message_only
+    assert len(lines) == 1 and lines[0].startswith("Refused: (no file): too few photographs") and "Run after" in lines[0]
+    assert isinstance(caught.value, ValueError) and caught.value.dimer_refusal and caught.value.dimer_message_only
     with pytest.raises(KeyError):
         samples.refuse_byod(KeyError("sample defect"), byod=False)
 
