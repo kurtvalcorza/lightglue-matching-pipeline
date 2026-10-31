@@ -4163,24 +4163,26 @@ def split_dataset(
 
 
 class BYODRefused(ValueError):
-    """A refused BYOD input (NOTEBOOK_SPEC DAT20). IPython, and the notebook's isolated runtime, show only this one
-    message, with no traceback, and Run all stops at the cell that raised it."""
+    """A refused BYOD input (NOTEBOOK_SPEC DAT20), ``<file>: <reason>``. IPython, and the notebook's isolated runtime
+    (its refusal channel, ``dimer_refusal``), show only the one line ``Refused: <file>: <reason>``, with no traceback,
+    and Run all stops at the cell that raised it."""
 
-    dimer_message_only = True
+    dimer_refusal = True  # the router's refusal channel (dat20-router-refusal/1)
+    dimer_message_only = True  # kept for the older router branch
 
     def _render_traceback_(self) -> list[str]:
-        return [f"BYOD refused: {self}"]
+        return [f"Refused: {self}"]
 
 
-def refuse_byod(exc: BaseException, *, byod: bool = True) -> None:
-    """Stop the BYOD intake with one message that names the problem and the next step.
+def refuse_byod(exc: BaseException, *, byod: bool = True, file: str = "(no file)") -> None:
+    """Stop the BYOD intake with one ``<file>: <reason>`` message that names the file, the problem and the next step.
 
     Outside BYOD (`byod=False`) the error is re-raised unchanged: a failure on the pinned sample is a defect to
     report with its traceback, not a refusal of the learner's input."""
     if not byod:
         raise exc
     raise BYODRefused(
-        f"{exc} Nothing was matched or trained, and the files in outputs/ are still the previous run's. Fix the input, "
+        f"{file}: {exc} Nothing was matched or trained, and the files in outputs/ are still the previous run's. Fix the input, "
         "then select Section 4 and choose Run after again."
     ) from None
 

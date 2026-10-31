@@ -1,0 +1,76 @@
+{
+  "repo": "lightglue-matching-pipeline",
+  "sha": "28b7453ebf72c583913c315c7f8e3e4b8dd73720",
+  "notebook": "tutorials/lightglue_matching_colab.ipynb",
+  "blob": "dd8bd138dafcc9ddc6c3d783e2b45a2372f59a32",
+  "gpu": "T4",
+  "session": "suite-lightglue-28b7453-b30d",
+  "started_utc": "2026-10-29T17:27:16+00:00",
+  "runner": "Colab CLI `colab exec -f` on a fresh session (not a browser Run all)",
+  "overrides": [
+    {
+      "name": "USE_BYOD",
+      "from": "False",
+      "to": "True"
+    },
+    {
+      "name": "BYOD_PATH",
+      "from": "''",
+      "to": "'/etc/hostname'"
+    }
+  ],
+  "run_copy_blob": "c996708c72da6243541768224866bc57a956e34e",
+  "run_copy_sha256": "d7c119e9efd08bd6a60670db7e8b2ccedc68621135e945a20a6c728cf6f31071",
+  "run_copy_note": "refusal run: the run copy is the committed notebook with the listed assignment overrides, cut immediately after the refusal cell and re-serialised (nbformat layout); input_unchanged compares against that copy",
+  "truncated_after_cell": "lightglue_matching-25",
+  "refusal_cell_ref": "lightglue_matching-25",
+  "refusal_cell_index": 12,
+  "cells_dropped": 13,
+  "code_cells_dropped": 6,
+  "original_sha256": "3ed12af71a51c8280b767d926242fe98f48a2160a9243ac3525f0367c371be2a",
+  "status": "[suite-lightglue-28b7453-b30d] gpu-t4-s-usw4b1-22na24yjfmuly | Hardware: T4 | Shape: Standard | Variant: GPU | Status: IDLE",
+  "exec_exit_code": 0,
+  "stopped": true,
+  "stop_verified": true,
+  "wall_s": 149.1,
+  "input_unchanged": true,
+  "executed_file": "lightglue_matching_colab_28b7453_colab-cli-t4_output.ipynb",
+  "log_cells": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "log_total": 12,
+  "code_cells": 12,
+  "executed_cells": 5,
+  "errors": [
+    {
+      "cell": "lightglue_matching-25",
+      "ename": "IsolatedCellRefusal",
+      "evalue": "hostname: BYOD datasets must be a directory or a .zip holding JPEG / PNG image files Nothing was matched or trained, and the files in outputs/ are still the previous run's. Fix the input, then select Section 4 and choose Run after again."
+    }
+  ],
+  "execution_counts": [],
+  "sequential": null,
+  "executed_sha256": "b7495ff1af976f84707685f93343b2a1fc786cb4a7c3447205c1bcd50c5ccef9",
+  "log_sequential_complete": true,
+  "mode": "expect_refusal",
+  "refusal_line": "Refused: hostname: BYOD datasets must be a directory or a .zip holding JPEG / PNG image files Nothing was matched or trained, and the files in outputs/ are still the previous run's. Fix the input, then select Section 4 and choose Run after again.",
+  "halting_cell_index": 12,
+  "halting_cell_id": "lightglue_matching-25",
+  "error_cells": [
+    12
+  ],
+  "refusal_fail_reasons": [],
+  "refusal_ok": true,
+  "verdict": "PASS"
+}
